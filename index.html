@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1735">
+  <title>Future Lab Galaxy | Student Challenges</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(145deg,#07152f,#102b55);color:#fff;display:flex;align-items:center;justify-content:center;padding:28px 16px}
+    main{width:min(760px,100%);text-align:center}
+    .brand{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#a9c8ff;font-weight:700}
+    h1{font-size:clamp(28px,5vw,44px);margin:14px 0 10px}
+    .intro{color:#d5e2f7;line-height:1.6;margin:0 auto 30px;max-width:560px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}
+    a.card{display:block;text-decoration:none;color:#10213e;background:#fff;border-radius:18px;padding:24px 18px;box-shadow:0 12px 30px #0003;transition:transform .18s,box-shadow .18s}
+    a.card:hover{transform:translateY(-4px);box-shadow:0 18px 36px #0005}
+    .emoji{font-size:38px;display:block;margin-bottom:12px}
+    .card strong{font-size:20px;display:block;margin-bottom:7px}
+    .card span.note{font-size:13px;color:#52627a}
+    footer{margin-top:30px;font-size:12px;color:#a9bddb}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">Future Lab Galaxy</div>
+    <h1>Interactive Student Challenges</h1>
+    <p class="intro">Choose a subject to open its interactive challenge. You can also access each subject directly using its own QR code.</p>
+    <section class="grid" aria-label="Choose a challenge">
+      <a class="card" href="physics.html"><span class="emoji">⚛️</span><strong>Physics Challenge</strong><span class="note">Open the interactive physics challenge</span></a>
+      <a class="card" href="chemistry.html"><span class="emoji">🧪</span><strong>Chemistry Challenge</strong><span class="note">Open the interactive chemistry challenge</span></a>
+      <a class="card" href="math.html"><span class="emoji">∑</span><strong>Math Challenge</strong><span class="note">Open the interactive mathematics challenge</span></a>
+    </section>
+    <footer>© Future Lab Galaxy</footer>
+  </main>
+</body>
+</html>
