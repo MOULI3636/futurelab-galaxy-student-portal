@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>PhysicsBlitz 30s — Class 10 &amp; 11 Interactive Visual Physics Challenge</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-studio: #FFFFFF;
+      --cobalt: #1D4ED8;
+      --emerald: #059669;
+      --amber: #D97706;
+      --purple: #6D28D9;
+      --crimson: #DC2626;
+      --charcoal: #0F172A;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #FFFFFF;
+      color: #0F172A;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .font-mono-math {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1D4ED8;
+      cursor: pointer;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.35);
+      transition: transform 0.12s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+    @keyframes pulse-urgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .timer-urgent {
+      animation: pulse-urgent 0.6s infinite ease-in-out;
+    }
+    button, input, label, .mode-tab {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #simCanvas {
+      touch-action: none;
+    }
+    @media (pointer: coarse) {
+      input[type="range"] {
+        height: 12px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
+      }
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      body {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 min-h-screen flex flex-col">
+
+  <!-- TOP NAVIGATION & 30-SECOND HUD -->
+  <header class="border-b-2 border-slate-200 bg-white sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Curriculum Badge -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-700 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+          ⚛
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">PhysicsBlitz 30s</h1>
+            <span class="text-xs font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Class 10 &amp; 11</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Interactive Visual Physics Simulation &amp; Rapid Problem-Solving Arena</p>
+        </div>
+      </div>
+
+      <!-- 30-Second Timer Core Widget -->
+      <div class="flex items-center gap-2 sm:gap-4 bg-slate-50 border-2 border-slate-200 rounded-2xl px-3 py-1.5">
+        <div class="flex flex-col min-w-[115px] sm:min-w-[140px]">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+            <span id="timerStateLabel">30s Challenge</span>
+            <span id="timerDisplay" class="font-mono-math text-base sm:text-lg font-extrabold text-blue-700">30.0s</span>
+          </div>
+          <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mt-1">
+            <div id="timerBar" class="h-full bg-blue-600 transition-all duration-100" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <button id="btnStartChallenge" type="button" class="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+          <span id="btnStartIcon">▶</span>
+          <span id="btnStartText">Start 30s</span>
+        </button>
+
+        <button id="btnResetChallenge" type="button" title="Reset 30s Timer &amp; Score" class="p-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition">
+          ↺
+        </button>
+      </div>
+
+      <!-- Score, Streak, Best, QR & Audio Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-white border-2 border-slate-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-slate-400">Score</div>
+          <div id="scoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-slate-900">0</div>
+        </div>
+        <div class="px-3 py-1.5 rounded-xl bg-amber-50 border-2 border-amber-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-amber-700">Streak</div>
+          <div id="streakDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-amber-700">0 🔥</div>
+        </div>
+        <div class="hidden md:block px-3 py-1.5 rounded-xl bg-emerald-50 border-2 border-emerald-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-emerald-700">Best (30s)</div>
+          <div id="bestScoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-emerald-700">0</div>
+        </div>
+        <button id="btnMute" type="button" class="p-2.5 rounded-xl border-2 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-sm transition" title="Toggle Sound Effects">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Topic Navigation Bar -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 bg-slate-50/70 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+        <button id="tab-proj" type="button" data-mode="proj" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm">
+          Class 11: Projectile Ship Landing
+        </button>
+        <button id="tab-optics" type="button" data-mode="optics" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 10: Convex Lens Laser Focus
+        </button>
+        <button id="tab-ohm" type="button" data-mode="ohm" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 10: Ohm's Law Robot Power
+        </button>
+        <button id="tab-blitz" type="button" data-mode="blitz" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-purple-700 border border-purple-300 hover:bg-purple-50">
+          ⚡ All-Physics 30s Mix
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+        <span id="solvedCountBadge" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-mono-math">Solved: 0</span>
+        <button id="btnSkipProblem" type="button" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold transition">
+          Next Challenge →
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT WORKSPACE -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- LEFT / CENTER: INTERACTIVE VISUAL SIMULATION CANVAS (7 COLS) -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- Active Challenge Prompt Banner -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span id="badgeClassLevel" class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">CLASS 11 • 2D PROJECTILE KINEMATICS</span>
+            <span id="badgeDifficulty" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">Challenge #1</span>
+          </div>
+          <h2 id="challengeTitle" class="text-sm sm:text-base font-extrabold text-slate-900">
+            Recovery ship helipad is at range R = 40 m (g = 10 m/s²). Launch at θ = 45° with velocity u!
+          </h2>
+        </div>
+
+        <button id="btnToggleHint" type="button" class="self-start sm:self-center shrink-0 px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition">
+          💡 Physics Formula
+        </button>
+      </div>
+
+      <!-- Collapsible Formula Hint Box -->
+      <div id="hintBanner" class="hidden bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-3 text-xs sm:text-sm text-amber-950 font-medium">
+        <div class="font-bold text-amber-900 mb-0.5">Physics Principle &amp; Formula Shortcut:</div>
+        <div id="hintText" class="font-mono-math text-xs">Horizontal Range R = (u² sin 2θ) / g. At θ = 45°, sin 90° = 1, so R = u² / 10.</div>
+      </div>
+
+      <!-- Pure White Studio Simulation Canvas Container -->
+      <div class="relative bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+        <!-- Top Overlay Readout inside Canvas -->
+        <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none z-10">
+          <div id="canvasEquationPill" class="px-3 py-1.5 rounded-xl bg-white/95 border-2 border-slate-200 shadow-sm font-mono-math text-xs sm:text-sm font-bold text-slate-900">
+            u = 20 m/s, θ = 45° → Range R = 40.0 m
+          </div>
+          <div id="canvasFeedbackPill" class="px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm">
+            Touch canvas, drag sliders, or tap a solution card!
+          </div>
+        </div>
+
+        <div class="w-full h-[255px] xs:h-[290px] sm:h-[420px] relative">
+          <canvas id="simCanvas" class="w-full h-full block bg-white"></canvas>
+        </div>
+
+        <!-- Bottom Live Telemetry Strip -->
+        <div class="bg-slate-50 border-t border-slate-200 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div id="telemetryLeft" class="font-mono-math font-semibold text-slate-700">
+            Max Altitude H_max = 10.0 m • Flight Time T = 2.83 s
+          </div>
+          <div id="telemetryRight" class="font-mono-math font-bold text-blue-700">
+            Target Ship Helipad: R = 40.0 m (g = 10 m/s²)
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: INTERACTIVE PARAMETER CONTROLS & FAST-SOLVE CARDS (5 COLS) -->
+    <section class="lg:col-span-5 flex flex-col gap-3">
+
+      <!-- FAST-SOLVE PHYSICS CARDS (Instant Lock & Fire for 30s Blitz!) -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-blue-700">⚡ Instant Physics Solve (+150 Speed Bonus)</h3>
+            <p class="text-xs text-slate-500">Calculate mentally &amp; tap the exact physical parameters to auto-set and trigger:</p>
+          </div>
+        </div>
+        <div id="quickChoiceContainer" class="grid grid-cols-2 gap-2 mt-2">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- LIVE VISUAL SANDBOX CONTROLS (Mode-Specific Sliders) -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h3 id="controlPanelTitle" class="text-sm font-extrabold text-slate-900">Live Physics Apparatus Controls</h3>
+            <p id="controlPanelSubtitle" class="text-xs text-slate-500">Touch &amp; drag directly on canvas or use the precision sliders below</p>
+          </div>
+          <span class="text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700">Touch Canvas or Sliders</span>
+        </div>
+
+        <!-- PANEL 1: CLASS 11 PROJECTILE KINEMATICS -->
+        <div id="controls-proj" class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderProjU" class="text-slate-700">Initial Launch Velocity <span class="font-mono-math text-blue-700">u (m/s)</span></label>
+              <span id="valProjU" class="font-mono-math text-blue-700">20 m/s</span>
+            </div>
+            <input id="sliderProjU" type="range" min="10" max="35" step="1" value="20" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderProjAngle" class="text-slate-700">Launch Elevation Angle <span class="font-mono-math text-emerald-700">θ (°)</span></label>
+              <span id="valProjAngle" class="font-mono-math text-emerald-700">45°</span>
+            </div>
+            <input id="sliderProjAngle" type="range" min="15" max="75" step="5" value="45" class="w-full" />
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button type="button" data-pangle="15" class="proj-angle-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">15°</button>
+              <button type="button" data-pangle="30" class="proj-angle-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">30°</button>
+              <button type="button" data-pangle="45" class="proj-angle-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">45°</button>
+              <button type="button" data-pangle="60" class="proj-angle-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">60°</button>
+              <button type="button" data-pangle="75" class="proj-angle-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">75°</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2: CLASS 10 RAY OPTICS (CONVEX LENS) -->
+        <div id="controls-optics" class="hidden space-y-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderOpticsF" class="text-slate-700">Convex Lens Focal Length <span class="font-mono-math text-blue-700">f (cm)</span></label>
+              <span id="valOpticsF" class="font-mono-math text-blue-700">+15 cm</span>
+            </div>
+            <input id="sliderOpticsF" type="range" min="10" max="25" step="1" value="15" class="w-full" />
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button type="button" data-focal="10" class="optics-f-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">f = +10 cm</button>
+              <button type="button" data-focal="12" class="optics-f-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">f = +12 cm</button>
+              <button type="button" data-focal="15" class="optics-f-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">f = +15 cm</button>
+              <button type="button" data-focal="20" class="optics-f-btn px-2.5 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">f = +20 cm</button>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 grid grid-cols-3 gap-2 text-center font-mono-math text-xs">
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Object u</div>
+              <div id="readoutOptU" class="font-bold text-slate-800">-30 cm</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Image v</div>
+              <div id="readoutOptV" class="font-bold text-blue-700">+30.0 cm</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Mag m = v/u</div>
+              <div id="readoutOptM" class="font-bold text-emerald-700">-1.00×</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 3: CLASS 10 OHM'S LAW & ELECTRIC POWER -->
+        <div id="controls-ohm" class="hidden space-y-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderOhmV" class="text-slate-700">Battery Source Voltage <span class="font-mono-math text-blue-700">V (Volts)</span></label>
+              <span id="valOhmV" class="font-mono-math text-blue-700">12 V</span>
+            </div>
+            <input id="sliderOhmV" type="range" min="4" max="36" step="2" value="12" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderOhmR" class="text-slate-700">Equivalent Circuit Resistance <span class="font-mono-math text-emerald-700">R_eq (Ω)</span></label>
+              <span id="valOhmR" class="font-mono-math text-emerald-700">4 Ω</span>
+            </div>
+            <input id="sliderOhmR" type="range" min="2" max="12" step="1" value="4" class="w-full" />
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between text-xs font-mono-math">
+            <span id="readoutOhmI" class="font-bold text-blue-700">Current I = V/R = 3.00 A</span>
+            <span id="readoutOhmP" class="font-bold text-purple-700">Power P = V·I = 36.0 W</span>
+          </div>
+        </div>
+
+        <!-- PRIMARY ACTION BUTTON -->
+        <button id="btnFireAction" type="button" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm shadow-sm transition flex items-center justify-center gap-2">
+          <span>🚀</span>
+          <span id="btnFireText">Launch Payload to Recovery Ship (Verify)</span>
+        </button>
+      </div>
+
+      <!-- RECENT SOLVED LOG / STEP-BY-STEP FEEDBACK -->
+      <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Live Physics Verification Log</span>
+          <span id="accuracyBadge" class="text-xs font-mono-math font-bold text-emerald-700">Accuracy: 100%</span>
+        </div>
+        <div id="verificationLog" class="text-xs font-mono-math text-slate-700 space-y-1 max-h-24 overflow-y-auto">
+          <div>• Ready! Click "Start 30s" or solve the active physics problem to begin the timer.</div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- 30-SECOND CHALLENGE COMPLETE SUMMARY MODAL -->
+  <div id="resultModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-slate-300 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 border-2 border-blue-200 text-3xl">
+        🏆
+      </div>
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">30-Second Physics Blitz Complete!</span>
+        <h2 id="modalHeadline" class="text-2xl font-extrabold text-slate-900 mt-2">Outstanding Physics Intuition!</h2>
+        <div id="modalStars" class="text-2xl mt-1">⭐⭐⭐</div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Final Score</div>
+          <div id="modalFinalScore" class="font-mono-math text-xl font-extrabold text-blue-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Solved</div>
+          <div id="modalSolvedCount" class="font-mono-math text-xl font-extrabold text-emerald-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Peak Streak</div>
+          <div id="modalPeakStreak" class="font-mono-math text-xl font-extrabold text-amber-600">0 🔥</div>
+        </div>
+      </div>
+
+      <div id="modalSummaryNote" class="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 text-left font-mono-math space-y-1 max-h-32 overflow-y-auto">
+      </div>
+
+      <div class="flex items-center gap-3 pt-1">
+        <button id="btnPlayAgainModal" type="button" class="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-sm transition">
+          ▶ Play Another 30s Round
+        </button>
+        <button id="btnCloseModal" type="button" class="px-4 py-3 rounded-xl border-2 border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm transition">
+          Practice
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // --- WEB AUDIO SYNTHESIZER ---
+      let audioCtx = null;
+      let isMuted = false;
+
+      function ensureAudio() {
+        if (isMuted) return null;
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      ['touchstart', 'pointerdown'].forEach((evtName) => {
+        window.addEventListener(evtName, () => {
+          if (!isMuted && audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        }, { passive: true });
+      });
+
+      function playSound(type) {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'hit') {
+          const freqs = [523.25, 659.25, 783.99, 1046.5];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now + idx * 0.055);
+            gain.gain.setValueAtTime(0.14, now + idx * 0.055);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.055);
+            osc.stop(now + idx * 0.055 + 0.24);
+          });
+        } else if (type === 'miss') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.28);
+        } else if (type === 'tick') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        } else if (type === 'finish') {
+          const freqs = [440, 554.37, 659.25, 880];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.36);
+          });
+        }
+      }
+
+      // --- PHYSICS QUESTION BANKS (CLASS 10 & CLASS 11) ---
+      // 1. Class 11 Projectile Kinematics: R = (u^2 * sin(2*theta)) / g, with g = 10 m/s^2
+      const PROJ_PROBLEMS = [
+        {
+          id: 'p1',
+          title: 'Recovery ship helipad is at range R = 40 m (g = 10 m/s²). Launch at θ = 45° with velocity u!',
+          hint: 'Range R = (u² sin 2θ) / g. At θ = 45°, sin 90° = 1 ⇒ 40 = u² / 10 ⇒ u² = 400 ⇒ u = 20 m/s.',
+          targetR: 40.0, uAns: 20, angleAns: 45,
+          choices: [
+            { label: 'u = 20 m/s, θ = 45°', u: 20, angle: 45, correct: true },
+            { label: 'u = 15 m/s, θ = 45°', u: 15, angle: 45, correct: false },
+            { label: 'u = 25 m/s, θ = 45°', u: 25, angle: 45, correct: false },
+            { label: 'u = 20 m/s, θ = 30°', u: 20, angle: 30, correct: false }
+          ]
+        },
+        {
+          id: 'p2',
+          title: 'Recovery ship is at R = 90 m (g = 10 m/s²). Find the 45° launch velocity u to land on deck!',
+          hint: 'At θ = 45°, maximum range R = u² / g ⇒ 90 = u² / 10 ⇒ u² = 900 ⇒ u = 30 m/s.',
+          targetR: 90.0, uAns: 30, angleAns: 45,
+          choices: [
+            { label: 'u = 30 m/s, θ = 45°', u: 30, angle: 45, correct: true },
+            { label: 'u = 25 m/s, θ = 45°', u: 25, angle: 45, correct: false },
+            { label: 'u = 30 m/s, θ = 60°', u: 30, angle: 60, correct: false },
+            { label: 'u = 20 m/s, θ = 45°', u: 20, angle: 45, correct: false }
+          ]
+        },
+        {
+          id: 'p3',
+          title: 'Ship is at R = 32 m (g = 10 m/s²). With u = 25 m/s, choose angle θ where sin(2θ) = 0.5 (R = 31.25 m)!',
+          hint: 'R = (u² sin 2θ)/10. For θ = 15° (or 75°), sin(30°) = 0.5 ⇒ R = (625 × 0.5)/10 = 31.25 m!',
+          targetR: 31.25, uAns: 25, angleAns: 15,
+          choices: [
+            { label: 'u = 25 m/s, θ = 15°', u: 25, angle: 15, correct: true },
+            { label: 'u = 25 m/s, θ = 45°', u: 25, angle: 45, correct: false },
+            { label: 'u = 20 m/s, θ = 15°', u: 20, angle: 15, correct: false },
+            { label: 'u = 15 m/s, θ = 30°', u: 15, angle: 30, correct: false }
+          ]
+        },
+        {
+          id: 'p4',
+          title: 'Ship helipad is at R = 34.6 m (20√3 m). With u = 20 m/s, pick launch angle θ!',
+          hint: 'R = (20² sin 2θ)/10 = 40 sin 2θ. Since 40 × (√3/2) ≈ 34.64 m, sin 2θ = √3/2 ⇒ θ = 30° (or 60°)!',
+          targetR: 34.64, uAns: 20, angleAns: 60,
+          choices: [
+            { label: 'u = 20 m/s, θ = 60°', u: 20, angle: 60, correct: true },
+            { label: 'u = 20 m/s, θ = 45°', u: 20, angle: 45, correct: false },
+            { label: 'u = 20 m/s, θ = 15°', u: 20, angle: 15, correct: false },
+            { label: 'u = 15 m/s, θ = 60°', u: 15, angle: 60, correct: false }
+          ]
+        },
+        {
+          id: 'p5',
+          title: 'Close-range recovery! Ship is at R = 20 m (g = 10 m/s²). Launch with u = 20 m/s at angle θ!',
+          hint: 'R = (400 sin 2θ)/10 = 40 sin 2θ = 20 ⇒ sin 2θ = 0.5 ⇒ 2θ = 30° ⇒ θ = 15° (or 75°)!',
+          targetR: 20.0, uAns: 20, angleAns: 15,
+          choices: [
+            { label: 'u = 20 m/s, θ = 15°', u: 20, angle: 15, correct: true },
+            { label: 'u = 20 m/s, θ = 45°', u: 20, angle: 45, correct: false },
+            { label: 'u = 30 m/s, θ = 45°', u: 30, angle: 45, correct: false },
+            { label: 'u = 25 m/s, θ = 30°', u: 25, angle: 30, correct: false }
+          ]
+        }
+      ];
+
+      // 2. Class 10 Ray Optics: 1/f = 1/v - 1/u => 1/v = 1/f + 1/u
+      const OPTICS_PROBLEMS = [
+        {
+          id: 'o1',
+          title: 'Laser object is at u = -30 cm (2F). Solar target drone is at v = +30 cm. Set lens focal length f!',
+          hint: 'Lens Formula: 1/f = 1/v - 1/u = 1/30 - (-1/30) = 2/30 = 1/15 ⇒ f = +15 cm (Symmetric 2F case).',
+          uObj: -30, targetV: 30, answerF: 15,
+          choices: [
+            { label: 'f = +15 cm (v = +30 cm)', f: 15, correct: true },
+            { label: 'f = +10 cm (v = +15 cm)', f: 10, correct: false },
+            { label: 'f = +20 cm (v = +60 cm)', f: 20, correct: false },
+            { label: 'f = +12 cm (v = +20 cm)', f: 12, correct: false }
+          ]
+        },
+        {
+          id: 'o2',
+          title: 'Object is at u = -30 cm. Focus the laser onto the solar receiver at v = +15 cm!',
+          hint: '1/f = 1/15 - (-1/30) = 2/30 + 1/30 = 3/30 = 1/10 ⇒ Focal length f = +10 cm.',
+          uObj: -30, targetV: 15, answerF: 10,
+          choices: [
+            { label: 'f = +10 cm (v = +15 cm)', f: 10, correct: true },
+            { label: 'f = +15 cm (v = +30 cm)', f: 15, correct: false },
+            { label: 'f = +20 cm (v = +60 cm)', f: 20, correct: false },
+            { label: 'f = +12 cm (v = +20 cm)', f: 12, correct: false }
+          ]
+        },
+        {
+          id: 'o3',
+          title: 'Object is at u = -30 cm. Focus the converging rays onto the distant sensor at v = +60 cm!',
+          hint: '1/f = 1/60 - (-1/30) = 1/60 + 2/60 = 3/60 = 1/20 ⇒ Focal length f = +20 cm (Magnification m = -2).',
+          uObj: -30, targetV: 60, answerF: 20,
+          choices: [
+            { label: 'f = +20 cm (v = +60 cm)', f: 20, correct: true },
+            { label: 'f = +15 cm (v = +30 cm)', f: 15, correct: false },
+            { label: 'f = +10 cm (v = +15 cm)', f: 10, correct: false },
+            { label: 'f = +12 cm (v = +20 cm)', f: 12, correct: false }
+          ]
+        },
+        {
+          id: 'o4',
+          title: 'Object is at u = -30 cm. Focus the laser beam onto the solar drone at v = +20 cm!',
+          hint: '1/f = 1/20 - (-1/30) = 3/60 + 2/60 = 5/60 = 1/12 ⇒ Focal length f = +12 cm.',
+          uObj: -30, targetV: 20, answerF: 12,
+          choices: [
+            { label: 'f = +12 cm (v = +20 cm)', f: 12, correct: true },
+            { label: 'f = +15 cm (v = +30 cm)', f: 15, correct: false },
+            { label: 'f = +10 cm (v = +15 cm)', f: 10, correct: false },
+            { label: 'f = +20 cm (v = +60 cm)', f: 20, correct: false }
+          ]
+        },
+        {
+          id: 'o5',
+          title: 'Object is at u = -40 cm. Focus the real inverted image at v = +40 cm (unit magnification m = -1)!',
+          hint: 'For |u| = |v| = 40 cm (object at 2F), focal length f = 40 / 2 = +20 cm!',
+          uObj: -40, targetV: 40, answerF: 20,
+          choices: [
+            { label: 'f = +20 cm (2F = 40 cm)', f: 20, correct: true },
+            { label: 'f = +10 cm (v = +13.3 cm)', f: 10, correct: false },
+            { label: 'f = +15 cm (v = +24.0 cm)', f: 15, correct: false },
+            { label: 'f = +12 cm (v = +17.1 cm)', f: 12, correct: false }
+          ]
+        }
+      ];
+
+      // 3. Class 10 Electricity & Ohm's Law: I = V / R_eq, P = V * I
+      const OHM_PROBLEMS = [
+        {
+          id: 'e1',
+          title: 'Power the Robot Rover with exact current I = 3.0 A across R_eq = 4 Ω! Find required voltage V!',
+          hint: 'Ohm\'s Law: V = I × R_eq = 3.0 A × 4 Ω = 12 V (Power P = 36 W).',
+          targetI: 3.0, ansV: 12, ansR: 4,
+          choices: [
+            { label: 'V = 12 V, R = 4 Ω (I = 3.0 A)', v: 12, r: 4, correct: true },
+            { label: 'V = 24 V, R = 4 Ω (I = 6.0 A)', v: 24, r: 4, correct: false },
+            { label: 'V = 8 V, R = 4 Ω (I = 2.0 A)', v: 8, r: 4, correct: false },
+            { label: 'V = 12 V, R = 8 Ω (I = 1.5 A)', v: 12, r: 8, correct: false }
+          ]
+        },
+        {
+          id: 'e2',
+          title: 'Robot Rover needs I = 4.0 A from a 24 V battery pack! Set the circuit resistance R_eq!',
+          hint: 'By Ohm\'s Law: R_eq = V / I = 24 V / 4.0 A = 6 Ω (Power P = 96 W).',
+          targetI: 4.0, ansV: 24, ansR: 6,
+          choices: [
+            { label: 'V = 24 V, R = 6 Ω (I = 4.0 A)', v: 24, r: 6, correct: true },
+            { label: 'V = 24 V, R = 8 Ω (I = 3.0 A)', v: 24, r: 8, correct: false },
+            { label: 'V = 24 V, R = 4 Ω (I = 6.0 A)', v: 24, r: 4, correct: false },
+            { label: 'V = 12 V, R = 6 Ω (I = 2.0 A)', v: 12, r: 6, correct: false }
+          ]
+        },
+        {
+          id: 'e3',
+          title: 'High-Torque Mode! Deliver I = 6.0 A to the Robot Rover using R_eq = 3 Ω!',
+          hint: 'V = I × R_eq = 6.0 A × 3 Ω = 18 V (Power delivered P = I²R = 36 × 3 = 108 W).',
+          targetI: 6.0, ansV: 18, ansR: 3,
+          choices: [
+            { label: 'V = 18 V, R = 3 Ω (I = 6.0 A)', v: 18, r: 3, correct: true },
+            { label: 'V = 12 V, R = 3 Ω (I = 4.0 A)', v: 12, r: 3, correct: false },
+            { label: 'V = 18 V, R = 6 Ω (I = 3.0 A)', v: 18, r: 6, correct: false },
+            { label: 'V = 24 V, R = 3 Ω (I = 8.0 A)', v: 24, r: 3, correct: false }
+          ]
+        },
+        {
+          id: 'e4',
+          title: 'Low-Power Sensor Mode! Supply exactly I = 2.0 A with a 16 V source!',
+          hint: 'R_eq = V / I = 16 V / 2.0 A = 8 Ω (Power P = 32 W).',
+          targetI: 2.0, ansV: 16, ansR: 8,
+          choices: [
+            { label: 'V = 16 V, R = 8 Ω (I = 2.0 A)', v: 16, r: 8, correct: true },
+            { label: 'V = 16 V, R = 4 Ω (I = 4.0 A)', v: 16, r: 4, correct: false },
+            { label: 'V = 24 V, R = 6 Ω (I = 4.0 A)', v: 24, r: 6, correct: false },
+            { label: 'V = 10 V, R = 10 Ω (I = 1.0 A)', v: 10, r: 10, correct: false }
+          ]
+        },
+        {
+          id: 'e5',
+          title: 'Turbo Core Charge! Supply I = 5.0 A across a 6 Ω load to reach P = 150 W!',
+          hint: 'V = I × R_eq = 5.0 A × 6 Ω = 30 V, and P = V × I = 30 × 5 = 150 W!',
+          targetI: 5.0, ansV: 30, ansR: 6,
+          choices: [
+            { label: 'V = 30 V, R = 6 Ω (I = 5.0 A)', v: 30, r: 6, correct: true },
+            { label: 'V = 24 V, R = 6 Ω (I = 4.0 A)', v: 24, r: 6, correct: false },
+            { label: 'V = 30 V, R = 10 Ω (I = 3.0 A)', v: 30, r: 10, correct: false },
+            { label: 'V = 20 V, R = 5 Ω (I = 4.0 A)', v: 20, r: 5, correct: false }
+          ]
+        }
+      ];
+
+      // --- APPLICATION STATE ---
+      const state = {
+        navMode: 'proj',        // 'proj' | 'optics' | 'ohm' | 'blitz'
+        activeTopic: 'proj',
+        problemIndex: { proj: 0, optics: 0, ohm: 0 },
+        currentProblem: PROJ_PROBLEMS[0],
+
+        timerRunning: false,
+        timeRemaining: 30.0,
+        lastFrameTime: 0,
+        lastTickSecond: 10,
+
+        score: 0,
+        streak: 0,
+        peakStreak: 0,
+        solvedCount: 0,
+        attemptCount: 0,
+        bestScore: 0,
+        roundHistory: [],
+
+        proj: { u: 15, angle: 45 },
+        optics: { f: 10 },
+        ohm: { v: 12, r: 6 },
+
+        animating: false,
+        animStartTime: 0,
+        animDuration: 620,
+        animResult: null,
+        particles: []
+      };
+
+      try {
+        const saved = localStorage.getItem('physicsblitz_best_30s');
+        if (saved) state.bestScore = parseInt(saved, 10) || 0;
+      } catch (e) {}
+
+      // --- DOM REFERENCES ---
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const shipImg = new Image();
+      shipImg.src = "data:image/png;base64,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";
+      const robotImg = new Image();
+      robotImg.src = "data:image/png;base64,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";
+
+      const timerDisplay = document.getElementById('timerDisplay');
+      const timerBar = document.getElementById('timerBar');
+      const timerStateLabel = document.getElementById('timerStateLabel');
+      const btnStartChallenge = document.getElementById('btnStartChallenge');
+      const btnStartIcon = document.getElementById('btnStartIcon');
+      const btnStartText = document.getElementById('btnStartText');
+      const btnResetChallenge = document.getElementById('btnResetChallenge');
+
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const streakDisplay = document.getElementById('streakDisplay');
+      const bestScoreDisplay = document.getElementById('bestScoreDisplay');
+      const solvedCountBadge = document.getElementById('solvedCountBadge');
+      const accuracyBadge = document.getElementById('accuracyBadge');
+      const btnMute = document.getElementById('btnMute');
+      const btnSkipProblem = document.getElementById('btnSkipProblem');
+
+      const badgeClassLevel = document.getElementById('badgeClassLevel');
+      const badgeDifficulty = document.getElementById('badgeDifficulty');
+      const challengeTitle = document.getElementById('challengeTitle');
+      const btnToggleHint = document.getElementById('btnToggleHint');
+      const hintBanner = document.getElementById('hintBanner');
+      const hintText = document.getElementById('hintText');
+
+      const canvasEquationPill = document.getElementById('canvasEquationPill');
+      const canvasFeedbackPill = document.getElementById('canvasFeedbackPill');
+      const telemetryLeft = document.getElementById('telemetryLeft');
+      const telemetryRight = document.getElementById('telemetryRight');
+
+      const quickChoiceContainer = document.getElementById('quickChoiceContainer');
+      const controlsProj = document.getElementById('controls-proj');
+      const controlsOptics = document.getElementById('controls-optics');
+      const controlsOhm = document.getElementById('controls-ohm');
+
+      const sliderProjU = document.getElementById('sliderProjU');
+      const sliderProjAngle = document.getElementById('sliderProjAngle');
+      const valProjU = document.getElementById('valProjU');
+      const valProjAngle = document.getElementById('valProjAngle');
+
+      const sliderOpticsF = document.getElementById('sliderOpticsF');
+      const valOpticsF = document.getElementById('valOpticsF');
+      const readoutOptU = document.getElementById('readoutOptU');
+      const readoutOptV = document.getElementById('readoutOptV');
+      const readoutOptM = document.getElementById('readoutOptM');
+
+      const sliderOhmV = document.getElementById('sliderOhmV');
+      const sliderOhmR = document.getElementById('sliderOhmR');
+      const valOhmV = document.getElementById('valOhmV');
+      const valOhmR = document.getElementById('valOhmR');
+      const readoutOhmI = document.getElementById('readoutOhmI');
+      const readoutOhmP = document.getElementById('readoutOhmP');
+
+      const btnFireAction = document.getElementById('btnFireAction');
+      const btnFireText = document.getElementById('btnFireText');
+      const verificationLog = document.getElementById('verificationLog');
+
+      const resultModal = document.getElementById('resultModal');
+      const modalHeadline = document.getElementById('modalHeadline');
+      const modalStars = document.getElementById('modalStars');
+      const modalFinalScore = document.getElementById('modalFinalScore');
+      const modalSolvedCount = document.getElementById('modalSolvedCount');
+      const modalPeakStreak = document.getElementById('modalPeakStreak');
+      const modalSummaryNote = document.getElementById('modalSummaryNote');
+      const btnPlayAgainModal = document.getElementById('btnPlayAgainModal');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+
+      bestScoreDisplay.textContent = String(state.bestScore);
+
+      function addLog(msg, isSuccess) {
+        const div = document.createElement('div');
+        div.className = isSuccess ? 'text-emerald-700 font-bold' : 'text-slate-700';
+        div.textContent = '• ' + msg;
+        verificationLog.prepend(div);
+      }
+
+      function setFeedbackPill(text, tone) {
+        canvasFeedbackPill.textContent = text;
+        if (tone === 'success') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm';
+        } else if (tone === 'error') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-red-600 text-white font-bold text-xs shadow-sm';
+        } else {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm';
+        }
+      }
+
+      // --- LOAD PROBLEM ---
+      function loadProblem(topic, advanceIndex) {
+        state.activeTopic = topic;
+        const bank = topic === 'proj' ? PROJ_PROBLEMS : (topic === 'optics' ? OPTICS_PROBLEMS : OHM_PROBLEMS);
+        if (advanceIndex) {
+          state.problemIndex[topic] = (state.problemIndex[topic] + 1) % bank.length;
+        }
+        const prob = bank[state.problemIndex[topic]];
+        state.currentProblem = prob;
+
+        if (topic === 'proj') {
+          state.proj.u = prob.uAns === 20 ? 15 : 20;
+          state.proj.angle = prob.angleAns === 45 ? 30 : 45;
+          sliderProjU.value = String(state.proj.u);
+          sliderProjAngle.value = String(state.proj.angle);
+          badgeClassLevel.textContent = 'CLASS 11 • 2D PROJECTILE KINEMATICS';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800';
+          btnFireText.textContent = '🚀 Launch Capsule to Recovery Ship (Verify)';
+        } else if (topic === 'optics') {
+          state.optics.f = prob.answerF === 15 ? 10 : 15;
+          sliderOpticsF.value = String(state.optics.f);
+          badgeClassLevel.textContent = 'CLASS 10 • RAY OPTICS (CONVEX LENS FOCUS)';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
+          btnFireText.textContent = '🔦 Pulse Optical Laser Through Lens (Verify)';
+        } else {
+          state.ohm.v = prob.ansV === 12 ? 8 : 12;
+          state.ohm.r = prob.ansR;
+          sliderOhmV.value = String(state.ohm.v);
+          sliderOhmR.value = String(state.ohm.r);
+          badgeClassLevel.textContent = 'CLASS 10 • ELECTRICITY & OHM\'S LAW';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-800';
+          btnFireText.textContent = '⚡ Energize Robot Rover Circuit (Verify)';
+        }
+
+        badgeDifficulty.textContent = 'Challenge #' + (state.problemIndex[topic] + 1);
+        challengeTitle.textContent = prob.title;
+        hintText.textContent = prob.hint;
+
+        controlsProj.classList.toggle('hidden', topic !== 'proj');
+        controlsOptics.classList.toggle('hidden', topic !== 'optics');
+        controlsOhm.classList.toggle('hidden', topic !== 'ohm');
+
+        renderQuickChoices(prob, topic);
+        updateReadouts();
+      }
+
+      function renderQuickChoices(prob, topic) {
+        quickChoiceContainer.innerHTML = '';
+        const shuffled = prob.choices.slice().sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((choice) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'px-3 py-2.5 rounded-xl border-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50/60 text-left font-mono-math text-xs font-bold text-slate-800 transition flex items-center justify-between gap-2 active:scale-[0.98]';
+          const spanText = document.createElement('span');
+          spanText.textContent = choice.label;
+          const spanArrow = document.createElement('span');
+          spanArrow.className = 'text-blue-600 font-sans text-xs';
+          spanArrow.textContent = '⚡';
+          btn.appendChild(spanText);
+          btn.appendChild(spanArrow);
+
+          btn.addEventListener('click', () => {
+            if (!state.timerRunning && state.timeRemaining === 30.0) {
+              startTimer();
+            }
+            if (topic === 'proj') {
+              state.proj.u = choice.u;
+              state.proj.angle = choice.angle;
+              sliderProjU.value = String(choice.u);
+              sliderProjAngle.value = String(choice.angle);
+            } else if (topic === 'optics') {
+              state.optics.f = choice.f;
+              sliderOpticsF.value = String(choice.f);
+            } else {
+              state.ohm.v = choice.v;
+              state.ohm.r = choice.r;
+              sliderOhmV.value = String(choice.v);
+              sliderOhmR.value = String(choice.r);
+            }
+            updateReadouts();
+            triggerFireAndVerify(true);
+          });
+
+          quickChoiceContainer.appendChild(btn);
+        });
+      }
+
+      // --- UPDATE READOUTS ---
+      function updateReadouts() {
+        const topic = state.activeTopic;
+        const prob = state.currentProblem;
+
+        if (topic === 'proj') {
+          const u = parseFloat(sliderProjU.value);
+          const deg = parseFloat(sliderProjAngle.value);
+          state.proj.u = u;
+          state.proj.angle = deg;
+
+          valProjU.textContent = `${u} m/s`;
+          valProjAngle.textContent = `${deg}°`;
+
+          const rad = (deg * Math.PI) / 180;
+          const g = 10;
+          const rangeR = (u * u * Math.sin(2 * rad)) / g;
+          const hMax = (u * u * Math.pow(Math.sin(rad), 2)) / (2 * g);
+          const flightT = (2 * u * Math.sin(rad)) / g;
+
+          canvasEquationPill.textContent = `u = ${u} m/s, θ = ${deg}° → Range R = ${rangeR.toFixed(1)} m`;
+          telemetryLeft.textContent = `Peak H_max = ${hMax.toFixed(1)} m • Flight T = ${flightT.toFixed(2)} s`;
+          telemetryRight.textContent = `Target Ship Helipad: R = ${prob.targetR.toFixed(1)} m`;
+        } else if (topic === 'optics') {
+          const f = parseFloat(sliderOpticsF.value);
+          state.optics.f = f;
+          valOpticsF.textContent = `+${f} cm`;
+
+          const u = prob.uObj;
+          // 1/v = 1/f + 1/u
+          const invV = 1 / f + 1 / u;
+          const v = Math.abs(invV) > 1e-5 ? 1 / invV : 999;
+          const m = v / u;
+
+          readoutOptU.textContent = `${u} cm`;
+          readoutOptV.textContent = `${v > 0 ? '+' : ''}${v.toFixed(1)} cm`;
+          readoutOptM.textContent = `${m.toFixed(2)}×`;
+
+          canvasEquationPill.textContent = `1/f = 1/v - 1/u → f = +${f} cm gives v = +${v.toFixed(1)} cm`;
+          telemetryLeft.textContent = `Object u = ${u} cm • Magnification m = ${m.toFixed(2)}×`;
+          telemetryRight.textContent = `Target Solar Receiver: v = +${prob.targetV} cm`;
+        } else {
+          const v = parseFloat(sliderOhmV.value);
+          const r = parseFloat(sliderOhmR.value);
+          state.ohm.v = v;
+          state.ohm.r = r;
+
+          valOhmV.textContent = `${v} V`;
+          valOhmR.textContent = `${r} Ω`;
+
+          const currI = v / r;
+          const powerP = v * currI;
+
+          readoutOhmI.textContent = `Current I = V/R = ${currI.toFixed(2)} A`;
+          readoutOhmP.textContent = `Power P = V·I = ${powerP.toFixed(1)} W`;
+
+          canvasEquationPill.textContent = `I = ${v}V / ${r}Ω = ${currI.toFixed(2)} A (Target: ${prob.targetI.toFixed(1)} A)`;
+          telemetryLeft.textContent = `Battery V = ${v} V • Circuit R_eq = ${r} Ω`;
+          telemetryRight.textContent = `Rover Target Current: I = ${prob.targetI.toFixed(1)} A (${(prob.targetI * v).toFixed(0)} W)`;
+        }
+      }
+
+      // --- VERIFY SOLUTION ---
+      function triggerFireAndVerify(isQuickCard) {
+        if (state.animating) return;
+
+        if (!state.timerRunning && state.timeRemaining === 30.0) {
+          startTimer();
+        }
+
+        const topic = state.activeTopic;
+        const prob = state.currentProblem;
+        let isHit = false;
+        let summaryDetail = '';
+
+        if (topic === 'proj') {
+          const { u, angle } = state.proj;
+          const rad = (angle * Math.PI) / 180;
+          const rangeR = (u * u * Math.sin(2 * rad)) / 10;
+          isHit = Math.abs(rangeR - prob.targetR) <= 2.2;
+          summaryDetail = `Projectile u=${u}m/s, θ=${angle}° → R=${rangeR.toFixed(1)}m`;
+        } else if (topic === 'optics') {
+          const f = state.optics.f;
+          const invV = 1 / f + 1 / prob.uObj;
+          const v = 1 / invV;
+          isHit = Math.abs(v - prob.targetV) <= 1.5;
+          summaryDetail = `Convex Lens f=+${f}cm → Image v=+${v.toFixed(1)}cm`;
+        } else {
+          const { v, r } = state.ohm;
+          const currI = v / r;
+          isHit = Math.abs(currI - prob.targetI) <= 0.15;
+          summaryDetail = `Ohm's Law I=${v}V/${r}Ω = ${currI.toFixed(2)}A`;
+        }
+
+        state.attemptCount += 1;
+        state.animating = true;
+        state.animStartTime = performance.now();
+        state.animDuration = 560;
+        state.animResult = { isHit, isQuickCard, summaryDetail };
+
+        if (isHit) {
+          playSound('hit');
+          state.streak += 1;
+          if (state.streak > state.peakStreak) state.peakStreak = state.streak;
+          state.solvedCount += 1;
+
+          const basePts = 200;
+          const speedBonus = isQuickCard ? 150 : 50;
+          const streakBonus = state.streak * 40;
+          const gained = basePts + speedBonus + streakBonus;
+          state.score += gained;
+
+          if (state.score > state.bestScore) {
+            state.bestScore = state.score;
+            bestScoreDisplay.textContent = String(state.bestScore);
+            try {
+              localStorage.setItem('physicsblitz_best_30s', String(state.bestScore));
+            } catch (e) {}
+          }
+
+          setFeedbackPill(`🎯 EXACT PHYSICS MATCH! +${gained} pts (Streak ×${state.streak})`, 'success');
+          addLog(`SOLVED (+${gained} pts): ${summaryDetail}`, true);
+          state.roundHistory.push(`✓ ${summaryDetail} (+${gained})`);
+          spawnCelebrationParticles();
+        } else {
+          playSound('miss');
+          state.streak = 0;
+          setFeedbackPill('✗ Missed target! Check the physics formula & adjust.', 'error');
+          addLog(`Missed: ${summaryDetail}. Adjust parameters!`, false);
+        }
+
+        updateScoreHUD();
+      }
+
+      function updateScoreHUD() {
+        scoreDisplay.textContent = String(state.score);
+        streakDisplay.textContent = `${state.streak} 🔥`;
+        solvedCountBadge.textContent = `Solved: ${state.solvedCount}`;
+        const acc = state.attemptCount > 0 ? Math.round((state.solvedCount / state.attemptCount) * 100) : 100;
+        accuracyBadge.textContent = `Accuracy: ${acc}%`;
+      }
+
+      function spawnCelebrationParticles() {
+        state.particles = [];
+        for (let i = 0; i < 28; i++) {
+          const angle = (Math.PI * 2 * i) / 28;
+          const speed = 1.5 + Math.random() * 3.5;
+          state.particles.push({
+            x: 0.7 * canvas.width,
+            y: 0.5 * canvas.height,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: ['#1D4ED8', '#059669', '#D97706', '#6D28D9'][i % 4]
+          });
+        }
+      }
+
+      // --- 30-SECOND TIMER ---
+      function startTimer() {
+        if (state.timerRunning) return;
+        if (state.timeRemaining <= 0) {
+          resetChallengeStats();
+        }
+        state.timerRunning = true;
+        state.lastFrameTime = performance.now();
+        state.lastTickSecond = Math.ceil(state.timeRemaining);
+        btnStartIcon.textContent = '⏸';
+        btnStartText.textContent = 'Pause';
+        timerStateLabel.textContent = 'LIVE 30s BLITZ';
+        setFeedbackPill('⏱ 30-Second Physics Challenge Active!', 'neutral');
+      }
+
+      function pauseTimer() {
+        state.timerRunning = false;
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Resume';
+        timerStateLabel.textContent = 'PAUSED';
+      }
+
+      function resetChallengeStats() {
+        state.timerRunning = false;
+        state.timeRemaining = 30.0;
+        state.score = 0;
+        state.streak = 0;
+        state.peakStreak = 0;
+        state.solvedCount = 0;
+        state.attemptCount = 0;
+        state.roundHistory = [];
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Start 30s';
+        timerStateLabel.textContent = '30s Challenge';
+        timerDisplay.textContent = '30.0s';
+        timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-blue-700';
+        timerBar.style.width = '100%';
+        timerBar.className = 'h-full bg-blue-600 transition-all duration-100';
+        updateScoreHUD();
+        setFeedbackPill('Timer reset to 30.0s. Press Start 30s or tap a solution card!', 'neutral');
+      }
+
+      function finishChallenge() {
+        state.timerRunning = false;
+        state.timeRemaining = 0;
+        timerDisplay.textContent = '0.0s';
+        timerBar.style.width = '0%';
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'New 30s';
+        playSound('finish');
+
+        modalFinalScore.textContent = String(state.score);
+        modalSolvedCount.textContent = String(state.solvedCount);
+        modalPeakStreak.textContent = `${state.peakStreak} 🔥`;
+
+        let stars = '⭐';
+        let headline = 'Good Effort! Keep Experimenting!';
+        if (state.solvedCount >= 5 || state.score >= 1800) {
+          stars = '⭐⭐⭐';
+          headline = 'Master of Class 10 & 11 Physics!';
+        } else if (state.solvedCount >= 3 || state.score >= 900) {
+          stars = '⭐⭐';
+          headline = 'Sharp Experimental Precision!';
+        }
+        modalStars.textContent = stars;
+        modalHeadline.textContent = headline;
+
+        modalSummaryNote.innerHTML = '';
+        if (state.roundHistory.length === 0) {
+          const line = document.createElement('div');
+          line.textContent = 'No problems completed in this 30s window. Use the Instant Physics Solve cards for rapid scoring!';
+          modalSummaryNote.appendChild(line);
+        } else {
+          state.roundHistory.forEach((item) => {
+            const line = document.createElement('div');
+            line.textContent = item;
+            modalSummaryNote.appendChild(line);
+          });
+        }
+
+        resultModal.classList.remove('hidden');
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(240, Math.floor(rect.height * dpr));
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // --- MAIN RENDER LOOP ---
+      function renderLoop(now) {
+        if (state.timerRunning) {
+          const dt = (now - state.lastFrameTime) / 1000;
+          state.lastFrameTime = now;
+          state.timeRemaining = Math.max(0, state.timeRemaining - dt);
+
+          timerDisplay.textContent = state.timeRemaining.toFixed(1) + 's';
+          const pct = (state.timeRemaining / 30.0) * 100;
+          timerBar.style.width = `${pct}%`;
+
+          if (state.timeRemaining <= 5.0) {
+            timerBar.className = 'h-full bg-red-600';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-red-600 timer-urgent';
+            const ceilSec = Math.ceil(state.timeRemaining);
+            if (ceilSec < state.lastTickSecond && ceilSec > 0) {
+              state.lastTickSecond = ceilSec;
+              playSound('tick');
+            }
+          } else if (state.timeRemaining <= 12.0) {
+            timerBar.className = 'h-full bg-amber-500';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-amber-600';
+          }
+
+          if (state.timeRemaining <= 0) {
+            finishChallenge();
+          }
+        } else {
+          state.lastFrameTime = now;
+        }
+
+        let animProgress = 1;
+        if (state.animating) {
+          animProgress = Math.min(1, (now - state.animStartTime) / state.animDuration);
+          if (animProgress >= 1) {
+            state.animating = false;
+            const wasHit = state.animResult && state.animResult.isHit;
+            state.animResult = null;
+            if (wasHit) {
+              if (state.navMode === 'blitz') {
+                const order = ['proj', 'optics', 'ohm'];
+                const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+                loadProblem(nextTopic, true);
+              } else {
+                loadProblem(state.activeTopic, true);
+              }
+            }
+          }
+        }
+
+        const W = canvas.width;
+        const H = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+
+        if (state.activeTopic === 'proj') {
+          drawProjectileScene(W, H, dpr, animProgress);
+        } else if (state.activeTopic === 'optics') {
+          drawOpticsScene(W, H, dpr, animProgress);
+        } else {
+          drawOhmScene(W, H, dpr, animProgress);
+        }
+
+        if (state.particles.length > 0) {
+          state.particles.forEach((p) => {
+            p.x += p.vx * dpr;
+            p.y += p.vy * dpr;
+            p.alpha -= 0.024;
+            if (p.alpha > 0) {
+              ctx.save();
+              ctx.globalAlpha = Math.max(0, p.alpha);
+              ctx.fillStyle = p.color;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 4.5 * dpr, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }
+          });
+          state.particles = state.particles.filter((p) => p.alpha > 0);
+        }
+
+        requestAnimationFrame(renderLoop);
+      }
+
+      // --- SCENE 1: CLASS 11 PROJECTILE KINEMATICS (OCEAN RECOVERY SHIP LANDING) ---
+      function drawProjectileScene(W, H, dpr, animT) {
+        const padL = 54 * dpr;
+        const padR = 38 * dpr;
+        const padT = 56 * dpr;
+        const padB = 48 * dpr;
+
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+
+        const xMax = 105;
+        const yMax = 55;
+
+        const toX = (x) => padL + (x / xMax) * plotW;
+        const toY = (y) => padT + plotH - (y / yMax) * plotH;
+
+        // Engineering grid
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1 * dpr;
+        for (let x = 0; x <= 100; x += 10) {
+          ctx.beginPath();
+          ctx.moveTo(toX(x), padT);
+          ctx.lineTo(toX(x), padT + plotH);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= 50; y += 10) {
+          ctx.beginPath();
+          ctx.moveTo(padL, toY(y));
+          ctx.lineTo(padL + plotW, toY(y));
+          ctx.stroke();
+        }
+
+        // Sea surface band at y = 0
+        const seaY = toY(0);
+        ctx.fillStyle = '#EFF6FF';
+        ctx.fillRect(padL, seaY, plotW, H - seaY);
+        ctx.strokeStyle = '#1D4ED8';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(padL, seaY);
+        ctx.lineTo(padL + plotW, seaY);
+        ctx.stroke();
+
+        // Axis ticks
+        ctx.fillStyle = '#475569';
+        ctx.font = `600 ${10.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        for (let x = 0; x <= 100; x += 20) {
+          ctx.fillText(`${x}m`, toX(x), seaY + 17 * dpr);
+        }
+
+        const prob = state.currentProblem;
+
+        // Draw Scientific Ocean Recovery Ship at targetR
+        const shipCenterX = toX(prob.targetR);
+        const shipW = 92 * dpr;
+        const shipH = 60 * dpr;
+        const bobOffset = Math.sin(performance.now() * 0.004) * 2.5 * dpr;
+
+        if (shipImg.complete && shipImg.naturalWidth > 0) {
+          ctx.drawImage(
+            shipImg,
+            shipCenterX - shipW * 0.58,
+            seaY - shipH * 0.78 + bobOffset,
+            shipW,
+            shipH
+          );
+        } else {
+          ctx.fillStyle = '#1E3A8A';
+          ctx.fillRect(shipCenterX - 30 * dpr, seaY - 18 * dpr, 60 * dpr, 18 * dpr);
+        }
+
+        // Glowing Helipad Target Beacon at (targetR, 0)
+        ctx.fillStyle = '#DC2626';
+        ctx.font = `800 ${11 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`🚢 HELIPAD R = ${prob.targetR}m`, shipCenterX, seaY + 32 * dpr);
+
+        // Calculate projectile kinematics
+        const { u, angle } = state.proj;
+        const rad = (angle * Math.PI) / 180;
+        const g = 10;
+        const rangeR = (u * u * Math.sin(2 * rad)) / g;
+        const hMax = (u * u * Math.pow(Math.sin(rad), 2)) / (2 * g);
+        const xPeak = rangeR / 2;
+
+        // Draw Parabolic Trajectory y(x)
+        ctx.save();
+        ctx.setLineDash([6 * dpr, 4 * dpr]);
+        ctx.strokeStyle = '#1D4ED8';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.beginPath();
+        const maxDrawX = Math.min(xMax, Math.max(rangeR, 5));
+        for (let x = 0; x <= maxDrawX; x += 0.8) {
+          const y = x * Math.tan(rad) - (g * x * x) / (2 * u * u * Math.pow(Math.cos(rad), 2));
+          if (y >= -2) {
+            const sx = toX(x);
+            const sy = toY(Math.max(0, y));
+            if (x === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw Peak Altitude Marker (xPeak, hMax)
+        if (xPeak <= xMax && hMax <= yMax) {
+          const px = toX(xPeak);
+          const py = toY(hMax);
+          ctx.fillStyle = '#059669';
+          ctx.beginPath();
+          ctx.arc(px, py, 5 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = `700 ${10 * dpr}px "JetBrains Mono", monospace`;
+          ctx.fillText(`H_max=${hMax.toFixed(1)}m`, px, py - 9 * dpr);
+        }
+
+        // Draw Velocity Vector Arrow at Origin (0, 0)
+        const ox = toX(0);
+        const oy = seaY;
+        const vecLen = (u / 35) * 85 * dpr;
+        const vxEnd = ox + Math.cos(rad) * vecLen;
+        const vyEnd = oy - Math.sin(rad) * vecLen;
+
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(vxEnd, vyEnd);
+        ctx.stroke();
+
+        ctx.fillStyle = '#059669';
+        ctx.beginPath();
+        ctx.arc(vxEnd, vyEnd, 5.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw Launcher Cannon at (0,0)
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate(-rad);
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(0, -6 * dpr, 24 * dpr, 12 * dpr);
+        ctx.restore();
+
+        // Draw Animated Capsule Payload in Flight
+        const curFrac = state.animating ? animT : 0;
+        if (state.animating) {
+          const curX = curFrac * rangeR;
+          const curY = Math.max(0, curX * Math.tan(rad) - (g * curX * curX) / (2 * u * u * Math.pow(Math.cos(rad), 2)));
+          const sx = toX(curX);
+          const sy = toY(curY);
+
+          ctx.fillStyle = '#D97706';
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 2 * dpr;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 9 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
+
+      // --- SCENE 2: CLASS 10 RAY OPTICS (CONVEX LENS LASER FOCUSING) ---
+      function drawOpticsScene(W, H, dpr, animT) {
+        const cx = W * 0.45;
+        const cy = H * 0.52;
+        const scale = (W - 90 * dpr) / 115; // maps -45 cm .. +70 cm
+
+        const toX = (cmX) => cx + cmX * scale;
+        const toY = (cmY) => cy - cmY * scale;
+
+        // Background optical grid
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1 * dpr;
+        for (let x = -40; x <= 60; x += 10) {
+          ctx.beginPath();
+          ctx.moveTo(toX(x), 45 * dpr);
+          ctx.lineTo(toX(x), H - 35 * dpr);
+          ctx.stroke();
+        }
+
+        // Principal Axis (y = 0)
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(24 * dpr, cy);
+        ctx.lineTo(W - 24 * dpr, cy);
+        ctx.stroke();
+
+        const prob = state.currentProblem;
+        const f = state.optics.f;
+        const u = prob.uObj; // negative
+        const hObj = 14;     // object height in cm
+
+        // Draw Crystalline Biconvex Lens at x = 0
+        const lensH = 95 * dpr;
+        ctx.save();
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.20)';
+        ctx.strokeStyle = '#0284C7';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - lensH);
+        ctx.quadraticCurveTo(cx + 22 * dpr, cy, cx, cy + lensH);
+        ctx.quadraticCurveTo(cx - 22 * dpr, cy, cx, cy - lensH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        // Mark Focal Points F1(-f, 0), 2F1(-2f, 0), F2(+f, 0), 2F2(+2f, 0)
+        const marks = [
+          { x: -f, label: 'F₁' },
+          { x: -2 * f, label: '2F₁' },
+          { x: f, label: 'F₂' },
+          { x: 2 * f, label: '2F₂' }
+        ];
+        ctx.fillStyle = '#0369A1';
+        ctx.font = `700 ${10.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        marks.forEach((m) => {
+          const mx = toX(m.x);
+          ctx.beginPath();
+          ctx.arc(mx, cy, 4 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillText(`${m.label}(${m.x > 0 ? '+' : ''}${m.x})`, mx, cy + 16 * dpr);
+        });
+
+        // Draw Laser Object Arrow at (u, 0) -> (u, hObj)
+        const objX = toX(u);
+        const objTopY = toY(hObj);
+        ctx.strokeStyle = '#1D4ED8';
+        ctx.lineWidth = 3.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(objX, cy);
+        ctx.lineTo(objX, objTopY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#1D4ED8';
+        ctx.beginPath();
+        ctx.arc(objX, objTopY, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = `800 ${10.5 * dpr}px "Inter", sans-serif`;
+        ctx.fillText(`LASER (u=${u}cm)`, objX, objTopY - 11 * dpr);
+
+        // Compute real image location (v, hImg) for current focal length f
+        const invV = 1 / f + 1 / u;
+        const v = 1 / invV;
+        const m = v / u;
+        const hImg = m * hObj;
+
+        const imgX = toX(v);
+        const imgTipY = toY(hImg);
+
+        // Draw Target Solar Receiver Drone at (prob.targetV, (prob.targetV / u) * hObj)
+        const targetX = toX(prob.targetV);
+        const targetY = toY((prob.targetV / u) * hObj);
+
+        ctx.save();
+        ctx.translate(targetX, targetY);
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(0, 0, 13 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FEF08A';
+        ctx.beginPath();
+        ctx.arc(0, 0, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = '#B91C1C';
+        ctx.font = `800 ${10.5 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`🎯 SOLAR SENSOR (v=+${prob.targetV}cm)`, targetX, targetY + 26 * dpr);
+
+        // Draw Principal Ray 1: Parallel to axis from (u, hObj) to (0, hObj), then through F2(f, 0) to (v, hImg)
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2.4 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(objX, objTopY);
+        ctx.lineTo(cx, objTopY);
+        ctx.lineTo(imgX, imgTipY);
+        ctx.stroke();
+
+        // Draw Principal Ray 2: Undeviated through Optical Center O(0, 0) to (v, hImg)
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 2.4 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(objX, objTopY);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(imgX, imgTipY);
+        ctx.stroke();
+
+        // Draw Real Converged Image Point at (v, hImg)
+        ctx.strokeStyle = '#7C3AED';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(imgX, cy);
+        ctx.lineTo(imgX, imgTipY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#7C3AED';
+        ctx.beginPath();
+        ctx.arc(imgX, imgTipY, 6 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- SCENE 3: CLASS 10 OHM'S LAW & ELECTRIC ROBOT ROVER POWER ---
+      function drawOhmScene(W, H, dpr, animT) {
+        const prob = state.currentProblem;
+        const { v, r } = state.ohm;
+        const currI = v / r;
+        const powerP = v * currI;
+        const diff = currI - prob.targetI;
+        const isExact = Math.abs(diff) <= 0.15;
+        const isOver = diff > 0.15;
+
+        // Left side: Animated Circuit Loop
+        const loopL = 46 * dpr;
+        const loopR = W * 0.52;
+        const loopT = 82 * dpr;
+        const loopB = H - 56 * dpr;
+
+        ctx.strokeStyle = isExact ? '#059669' : (isOver ? '#DC2626' : '#334155');
+        ctx.lineWidth = 4 * dpr;
+        ctx.strokeRect(loopL, loopT, loopR - loopL, loopB - loopT);
+
+        // Animated electron spheres flowing around the rectangular loop at speed proportional to current I
+        const perim = 2 * ((loopR - loopL) + (loopB - loopT));
+        const speedOffset = ((performance.now() * 0.06 * currI) % perim);
+        const numElectrons = 14;
+        for (let i = 0; i < numElectrons; i++) {
+          let d = (speedOffset + (i * perim) / numElectrons) % perim;
+          let ex = loopL, ey = loopT;
+          const wRect = loopR - loopL;
+          const hRect = loopB - loopT;
+          if (d < wRect) {
+            ex = loopL + d; ey = loopT;
+          } else if (d < wRect + hRect) {
+            ex = loopR; ey = loopT + (d - wRect);
+          } else if (d < 2 * wRect + hRect) {
+            ex = loopR - (d - wRect - hRect); ey = loopB;
+          } else {
+            ex = loopL; ey = loopB - (d - 2 * wRect - hRect);
+          }
+          ctx.fillStyle = '#2563EB';
+          ctx.beginPath();
+          ctx.arc(ex, ey, 4.5 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Battery Cell Badge on Left Wire
+        const batY = (loopT + loopB) / 2;
+        ctx.fillStyle = '#1D4ED8';
+        ctx.fillRect(loopL - 22 * dpr, batY - 22 * dpr, 44 * dpr, 44 * dpr);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = `800 ${11 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${v}V`, loopL, batY + 4 * dpr);
+
+        // Resistor Block on Top Wire
+        const resX = (loopL + loopR) / 2;
+        ctx.fillStyle = '#FEF3C7';
+        ctx.strokeStyle = '#D97706';
+        ctx.lineWidth = 2.5 * dpr;
+        ctx.fillRect(resX - 38 * dpr, loopT - 16 * dpr, 76 * dpr, 32 * dpr);
+        ctx.strokeRect(resX - 38 * dpr, loopT - 16 * dpr, 76 * dpr, 32 * dpr);
+        ctx.fillStyle = '#92400E';
+        ctx.fillText(`R = ${r} Ω`, resX, loopT + 4 * dpr);
+
+        // Ammeter Gauge on Bottom Wire
+        ctx.fillStyle = '#ECFDF5';
+        ctx.strokeStyle = '#059669';
+        ctx.beginPath();
+        ctx.arc(resX, loopB, 22 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#065F46';
+        ctx.fillText(`${currI.toFixed(1)}A`, resX, loopB + 4 * dpr);
+
+        // Right side: Sci-Fi Electric Robot Rover Mascot
+        const robCX = W * 0.76;
+        const robCY = H * 0.50;
+        const robSize = Math.min(W * 0.34, H * 0.58);
+
+        // Dynamic Power Aura behind Robot Rover
+        const pulse = 1 + 0.06 * Math.sin(performance.now() * 0.008);
+        ctx.save();
+        ctx.fillStyle = isExact
+          ? 'rgba(16, 185, 129, 0.20)'
+          : (isOver ? 'rgba(220, 38, 38, 0.20)' : 'rgba(245, 158, 11, 0.15)');
+        ctx.beginPath();
+        ctx.arc(robCX, robCY, robSize * 0.58 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        if (robotImg.complete && robotImg.naturalWidth > 0) {
+          ctx.drawImage(
+            robotImg,
+            robCX - robSize / 2,
+            robCY - robSize / 2,
+            robSize,
+            robSize
+          );
+        }
+
+        // Robot Power Core Status Banner
+        ctx.fillStyle = isExact ? '#047857' : (isOver ? '#B91C1C' : '#B45309');
+        ctx.font = `800 ${11.5 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        const statusMsg = isExact
+          ? `⚡ OPTIMAL ROVER POWER (${currI.toFixed(1)}A / ${powerP.toFixed(0)}W)`
+          : (isOver ? `⚠ OVERCURRENT! (${currI.toFixed(1)}A > ${prob.targetI.toFixed(1)}A)` : `🔋 LOW CURRENT (${currI.toFixed(1)}A < ${prob.targetI.toFixed(1)}A)`);
+        ctx.fillText(statusMsg, robCX, robCY + robSize * 0.56);
+      }
+
+      // --- DIRECT TOUCH & POINTER DRAG ON CANVAS (ANDROID & IPHONE) ---
+      let isCanvasDragging = false;
+
+      function handleCanvasPointer(clientX, clientY) {
+        if (state.animating) return;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const px = (clientX - rect.left) * dpr;
+        const py = (clientY - rect.top) * dpr;
+        const W = canvas.width;
+        const H = canvas.height;
+
+        if (state.activeTopic === 'proj') {
+          const padL = 54 * dpr;
+          const padT = 56 * dpr, padB = 48 * dpr;
+          const plotH = H - padT - padB;
+          const seaY = padT + plotH;
+          const dx = Math.max(5, px - padL);
+          const dy = Math.max(5, seaY - py);
+          const angleDeg = Math.round((Math.atan2(dy, dx) * 180) / Math.PI / 5) * 5;
+          const clampedAngle = Math.max(15, Math.min(75, angleDeg));
+          const dist = Math.hypot(dx, dy) / dpr;
+          const mappedU = Math.max(10, Math.min(35, Math.round(10 + (dist / 160) * 25)));
+          sliderProjAngle.value = String(clampedAngle);
+          sliderProjU.value = String(mappedU);
+          updateReadouts();
+        } else if (state.activeTopic === 'optics') {
+          const cx = W * 0.45;
+          const scale = (W - 90 * dpr) / 115;
+          const cmX = Math.abs((px - cx) / scale);
+          const clampedF = Math.max(10, Math.min(25, Math.round(cmX)));
+          sliderOpticsF.value = String(clampedF);
+          updateReadouts();
+        } else if (state.activeTopic === 'ohm') {
+          const fracY = 1 - Math.max(0, Math.min(1, py / H));
+          const mappedV = Math.max(4, Math.min(36, Math.round((4 + fracY * 32) / 2) * 2));
+          sliderOhmV.value = String(mappedV);
+          updateReadouts();
+        }
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        isCanvasDragging = true;
+        ensureAudio();
+        handleCanvasPointer(e.clientX, e.clientY);
+      });
+      canvas.addEventListener('pointermove', (e) => {
+        if (!isCanvasDragging) return;
+        handleCanvasPointer(e.clientX, e.clientY);
+      });
+      window.addEventListener('pointerup', () => { isCanvasDragging = false; });
+      window.addEventListener('pointercancel', () => { isCanvasDragging = false; });
+
+      // --- UI EVENT LISTENERS ---
+      document.querySelectorAll('.mode-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-mode');
+          state.navMode = mode;
+
+          document.querySelectorAll('.mode-tab').forEach((b) => {
+            const isSelected = b.getAttribute('data-mode') === mode;
+            b.className = isSelected
+              ? 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm'
+              : 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+          });
+
+          const targetTopic = mode === 'blitz' ? 'proj' : mode;
+          loadProblem(targetTopic, false);
+        });
+      });
+
+      btnStartChallenge.addEventListener('click', () => {
+        if (state.timerRunning) pauseTimer();
+        else startTimer();
+      });
+
+      btnResetChallenge.addEventListener('click', resetChallengeStats);
+
+      btnSkipProblem.addEventListener('click', () => {
+        if (state.navMode === 'blitz') {
+          const order = ['proj', 'optics', 'ohm'];
+          const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+          loadProblem(nextTopic, true);
+        } else {
+          loadProblem(state.activeTopic, true);
+        }
+      });
+
+      btnToggleHint.addEventListener('click', () => {
+        hintBanner.classList.toggle('hidden');
+      });
+
+      btnMute.addEventListener('click', () => {
+        isMuted = !isMuted;
+        btnMute.textContent = isMuted ? '🔇' : '🔊';
+      });
+
+      [sliderProjU, sliderProjAngle].forEach((el) => el.addEventListener('input', updateReadouts));
+      document.querySelectorAll('.proj-angle-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sliderProjAngle.value = btn.getAttribute('data-pangle');
+          updateReadouts();
+        });
+      });
+
+      sliderOpticsF.addEventListener('input', updateReadouts);
+      document.querySelectorAll('.optics-f-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sliderOpticsF.value = btn.getAttribute('data-focal');
+          updateReadouts();
+        });
+      });
+
+      [sliderOhmV, sliderOhmR].forEach((el) => el.addEventListener('input', updateReadouts));
+
+      btnFireAction.addEventListener('click', () => triggerFireAndVerify(false));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'BUTTON') {
+          e.preventDefault();
+          triggerFireAndVerify(false);
+        }
+      });
+
+      btnPlayAgainModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+        startTimer();
+      });
+
+      btnCloseModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+      });
+
+      loadProblem('proj', false);
+      requestAnimationFrame(renderLoop);
+    })();
+  </script>
+</body>
+</html>

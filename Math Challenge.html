@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <title>MathBlitz 30s — Class 10 &amp; 11 Interactive Visual Math Challenge</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-studio: #FFFFFF;
+      --cobalt: #1D4ED8;
+      --emerald: #059669;
+      --amber: #D97706;
+      --purple: #6D28D9;
+      --crimson: #DC2626;
+      --charcoal: #0F172A;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #FFFFFF;
+      color: #0F172A;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .font-mono-math {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1D4ED8;
+      cursor: pointer;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.35);
+      transition: transform 0.12s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+    .matrix-bracket-left {
+      border-left: 3px solid #0F172A;
+      border-top: 3px solid #0F172A;
+      border-bottom: 3px solid #0F172A;
+      width: 10px;
+      border-radius: 4px 0 0 4px;
+    }
+    .matrix-bracket-right {
+      border-right: 3px solid #0F172A;
+      border-top: 3px solid #0F172A;
+      border-bottom: 3px solid #0F172A;
+      width: 10px;
+      border-radius: 0 4px 4px 0;
+    }
+    @keyframes pulse-urgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .timer-urgent {
+      animation: pulse-urgent 0.6s infinite ease-in-out;
+    }
+    button, input, label, .mode-tab {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #simCanvas {
+      touch-action: none;
+    }
+    @media (pointer: coarse) {
+      input[type="range"] {
+        height: 12px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
+      }
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      body {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 min-h-screen flex flex-col">
+
+  <!-- TOP NAVIGATION & 30-SECOND HUD -->
+  <header class="border-b-2 border-slate-200 bg-white sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Curriculum Badge -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-700 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+          ∑
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">MathBlitz 30s</h1>
+            <span class="text-xs font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Class 10 &amp; 11</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Interactive Visual Mathematics Simulation &amp; Rapid Problem-Solving Arena</p>
+        </div>
+      </div>
+
+      <!-- 30-Second Timer Core Widget -->
+      <div class="flex items-center gap-2 sm:gap-4 bg-slate-50 border-2 border-slate-200 rounded-2xl px-3 py-1.5">
+        <div class="flex flex-col min-w-[115px] sm:min-w-[140px]">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+            <span id="timerStateLabel">30s Challenge</span>
+            <span id="timerDisplay" class="font-mono-math text-base sm:text-lg font-extrabold text-blue-700">30.0s</span>
+          </div>
+          <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mt-1">
+            <div id="timerBar" class="h-full bg-blue-600 transition-all duration-100" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <button id="btnStartChallenge" type="button" class="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+          <span id="btnStartIcon">▶</span>
+          <span id="btnStartText">Start 30s</span>
+        </button>
+
+        <button id="btnResetChallenge" type="button" title="Reset 30s Timer &amp; Score" class="p-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition">
+          ↺
+        </button>
+      </div>
+
+      <!-- Score, Streak, Best & Audio Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-white border-2 border-slate-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-slate-400">Score</div>
+          <div id="scoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-slate-900">0</div>
+        </div>
+        <div class="px-3 py-1.5 rounded-xl bg-amber-50 border-2 border-amber-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-amber-700">Streak</div>
+          <div id="streakDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-amber-700">0 🔥</div>
+        </div>
+        <div class="hidden md:block px-3 py-1.5 rounded-xl bg-emerald-50 border-2 border-emerald-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-emerald-700">Best (30s)</div>
+          <div id="bestScoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-emerald-700">0</div>
+        </div>
+        <button id="btnOpenQR" type="button" class="px-2.5 py-2 rounded-xl border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs transition flex items-center gap-1" title="Show Classroom QR Code for Mobile Phones">
+          <span>📱</span>
+          <span class="hidden sm:inline">QR Code</span>
+        </button>
+        <button id="btnMute" type="button" class="p-2.5 rounded-xl border-2 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-sm transition" title="Toggle Sound Effects">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Topic Navigation Bar -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 bg-slate-50/70 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+        <button id="tab-quad" type="button" data-mode="quad" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm">
+          Class 10: Quadratic Trajectory
+        </button>
+        <button id="tab-trig" type="button" data-mode="trig" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 10: Trig Laser Targeting
+        </button>
+        <button id="tab-matrix" type="button" data-mode="matrix" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 11: Matrix Transformer
+        </button>
+        <button id="tab-blitz" type="button" data-mode="blitz" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-purple-700 border border-purple-300 hover:bg-purple-50">
+          ⚡ All-Topic 30s Mix
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+        <span id="solvedCountBadge" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-mono-math">Solved: 0</span>
+        <button id="btnSkipProblem" type="button" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold transition">
+          Next Challenge →
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT WORKSPACE -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- LEFT / CENTER: INTERACTIVE VISUAL SIMULATION CANVAS (7 COLS) -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- Active Challenge Prompt Banner -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span id="badgeClassLevel" class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">CLASS 10 • QUADRATIC EQUATIONS</span>
+            <span id="badgeDifficulty" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">Target #1</span>
+          </div>
+          <h2 id="challengeTitle" class="text-sm sm:text-base font-extrabold text-slate-900">
+            Aim the parabola through vertex (4, 6) to hit the target ring at (8, 2)!
+          </h2>
+        </div>
+
+        <button id="btnToggleHint" type="button" class="self-start sm:self-center shrink-0 px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition">
+          💡 Formula Hint
+        </button>
+      </div>
+
+      <!-- Collapsible Formula Hint Box -->
+      <div id="hintBanner" class="hidden bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-3 text-xs sm:text-sm text-amber-950 font-medium">
+        <div class="font-bold text-amber-900 mb-0.5">Mathematical Concept &amp; Shortcut:</div>
+        <div id="hintText" class="font-mono-math text-xs">Vertex Form: y = a(x - h)² + k. Substitute the target point (x, y) to solve for leading coefficient a.</div>
+      </div>
+
+      <!-- Pure White Studio Simulation Canvas Container -->
+      <div class="relative bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+        <!-- Top Overlay Readout inside Canvas -->
+        <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none z-10">
+          <div id="canvasEquationPill" class="px-3 py-1.5 rounded-xl bg-white/95 border-2 border-slate-200 shadow-sm font-mono-math text-xs sm:text-sm font-bold text-slate-900">
+            y = -0.25(x - 4)² + 6
+          </div>
+          <div id="canvasFeedbackPill" class="px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm">
+            Adjust sliders or tap an equation card to fire!
+          </div>
+        </div>
+
+        <div class="w-full h-[255px] xs:h-[290px] sm:h-[420px] relative">
+          <canvas id="simCanvas" class="w-full h-full block bg-white"></canvas>
+        </div>
+
+        <!-- Bottom Live Telemetry Strip -->
+        <div class="bg-slate-50 border-t border-slate-200 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div id="telemetryLeft" class="font-mono-math font-semibold text-slate-700">
+            Standard Form: y = -0.25x² + 2.00x + 2.00
+          </div>
+          <div id="telemetryRight" class="font-mono-math font-bold text-blue-700">
+            Target: (8, 2) • Discriminant Δ = 24.0
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: INTERACTIVE PARAMETER CONTROLS & FAST-SOLVE CARDS (5 COLS) -->
+    <section class="lg:col-span-5 flex flex-col gap-3">
+
+      <!-- FAST-SOLVE ALGEBRAIC CARDS (Instant Lock & Fire for 30s Blitz!) -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-blue-700">⚡ Instant Math Solve (+150 Speed Bonus)</h3>
+            <p class="text-xs text-slate-500">Solve mentally &amp; tap the exact mathematical solution to auto-aim and fire:</p>
+          </div>
+        </div>
+        <div id="quickChoiceContainer" class="grid grid-cols-2 gap-2 mt-2">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- LIVE VISUAL SANDBOX CONTROLS (Mode-Specific Sliders / Matrix Grid) -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h3 id="controlPanelTitle" class="text-sm font-extrabold text-slate-900">Live Simulation Controls</h3>
+            <p id="controlPanelSubtitle" class="text-xs text-slate-500">Tune parameters manually &amp; watch the simulation respond in real time</p>
+          </div>
+          <span class="text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700">Touch Canvas or Sliders</span>
+        </div>
+
+        <!-- PANEL 1: CLASS 10 QUADRATIC SLIDERS -->
+        <div id="controls-quad" class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderQuadA" class="text-slate-700">Parabola Curvature <span class="font-mono-math text-blue-700">a</span></label>
+              <span id="valQuadA" class="font-mono-math text-blue-700">-0.25</span>
+            </div>
+            <input id="sliderQuadA" type="range" min="-1.0" max="0.5" step="0.05" value="-0.25" class="w-full" />
+            <div class="flex justify-between text-[10px] text-slate-400 font-mono-math mt-0.5">
+              <span>-1.0 (Steep Arch)</span>
+              <span>0 (Flat)</span>
+              <span>+0.5 (Upward)</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderQuadH" class="text-slate-700">Vertex Horizontal X <span class="font-mono-math text-emerald-700">h</span></label>
+              <span id="valQuadH" class="font-mono-math text-emerald-700">4.0</span>
+            </div>
+            <input id="sliderQuadH" type="range" min="1" max="9" step="0.5" value="4" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderQuadK" class="text-slate-700">Vertex Peak Height Y <span class="font-mono-math text-purple-700">k</span></label>
+              <span id="valQuadK" class="font-mono-math text-purple-700">6.0</span>
+            </div>
+            <input id="sliderQuadK" type="range" min="1" max="9" step="0.5" value="6" class="w-full" />
+          </div>
+        </div>
+
+        <!-- PANEL 2: CLASS 10 TRIGONOMETRY SLIDERS -->
+        <div id="controls-trig" class="hidden space-y-3">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <label for="sliderTrigAngle" class="text-slate-700">Laser Elevation / Depression Angle <span class="font-mono-math text-blue-700">θ</span></label>
+              <span id="valTrigAngle" class="font-mono-math text-blue-700">30°</span>
+            </div>
+            <input id="sliderTrigAngle" type="range" min="-60" max="75" step="1" value="30" class="w-full" />
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <button type="button" data-angle="-60" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">-60°</button>
+              <button type="button" data-angle="-45" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">-45°</button>
+              <button type="button" data-angle="-30" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">-30°</button>
+              <button type="button" data-angle="0" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">0°</button>
+              <button type="button" data-angle="30" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">+30°</button>
+              <button type="button" data-angle="45" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">+45°</button>
+              <button type="button" data-angle="60" class="trig-preset-btn px-2 py-1 text-xs font-mono-math font-bold rounded-lg border border-slate-300 hover:bg-blue-50">+60°</button>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 grid grid-cols-3 gap-2 text-center font-mono-math text-xs">
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">sin(θ)</div>
+              <div id="readoutSin" class="font-bold text-slate-800">0.500</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">cos(θ)</div>
+              <div id="readoutCos" class="font-bold text-slate-800">0.866</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">tan(θ) = Δy/D</div>
+              <div id="readoutTan" class="font-bold text-blue-700">0.577</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 3: CLASS 11 MATRIX 2x2 TRANSFORMER -->
+        <div id="controls-matrix" class="hidden space-y-3">
+          <div class="flex items-center justify-center gap-3 py-1">
+            <div class="text-xs font-bold text-slate-600 font-mono-math">M =</div>
+            <div class="flex items-stretch">
+              <div class="matrix-bracket-left"></div>
+              <div class="grid grid-cols-2 gap-2 px-2 py-1">
+                <!-- Cell a (row 1, col 1) -->
+                <div class="flex flex-col items-center bg-blue-50/70 border border-blue-200 rounded-xl p-1.5">
+                  <span class="text-[10px] font-bold text-blue-700">a (x → x')</span>
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <button type="button" data-mat="a" data-delta="-0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">-</button>
+                    <input id="matA" type="number" step="0.5" min="-2" max="2" value="1" inputmode="decimal" class="w-12 text-center font-mono-math font-bold text-base sm:text-sm bg-white border border-slate-300 rounded py-0.5" />
+                    <button type="button" data-mat="a" data-delta="0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">+</button>
+                  </div>
+                </div>
+                <!-- Cell b (row 1, col 2) -->
+                <div class="flex flex-col items-center bg-emerald-50/70 border border-emerald-200 rounded-xl p-1.5">
+                  <span class="text-[10px] font-bold text-emerald-700">b (y → x')</span>
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <button type="button" data-mat="b" data-delta="-0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">-</button>
+                    <input id="matB" type="number" step="0.5" min="-2" max="2" value="0" inputmode="decimal" class="w-12 text-center font-mono-math font-bold text-base sm:text-sm bg-white border border-slate-300 rounded py-0.5" />
+                    <button type="button" data-mat="b" data-delta="0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">+</button>
+                  </div>
+                </div>
+                <!-- Cell c (row 2, col 1) -->
+                <div class="flex flex-col items-center bg-blue-50/70 border border-blue-200 rounded-xl p-1.5">
+                  <span class="text-[10px] font-bold text-blue-700">c (x → y')</span>
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <button type="button" data-mat="c" data-delta="-0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">-</button>
+                    <input id="matC" type="number" step="0.5" min="-2" max="2" value="0" inputmode="decimal" class="w-12 text-center font-mono-math font-bold text-base sm:text-sm bg-white border border-slate-300 rounded py-0.5" />
+                    <button type="button" data-mat="c" data-delta="0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">+</button>
+                  </div>
+                </div>
+                <!-- Cell d (row 2, col 2) -->
+                <div class="flex flex-col items-center bg-emerald-50/70 border border-emerald-200 rounded-xl p-1.5">
+                  <span class="text-[10px] font-bold text-emerald-700">d (y → y')</span>
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <button type="button" data-mat="d" data-delta="-0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">-</button>
+                    <input id="matD" type="number" step="0.5" min="-2" max="2" value="1" inputmode="decimal" class="w-12 text-center font-mono-math font-bold text-base sm:text-sm bg-white border border-slate-300 rounded py-0.5" />
+                    <button type="button" data-mat="d" data-delta="0.5" class="mat-step-btn w-8 h-8 sm:w-6 sm:h-6 rounded-lg bg-white border border-slate-300 font-extrabold text-sm sm:text-xs hover:bg-slate-100 active:bg-blue-50">+</button>
+                  </div>
+                </div>
+              </div>
+              <div class="matrix-bracket-right"></div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between text-xs font-mono-math">
+            <span id="readoutDet" class="font-bold text-slate-800">det(M) = ad - bc = 1.00</span>
+            <span id="readoutAreaScale" class="font-bold text-purple-700">Area Scale = 1.00×</span>
+          </div>
+        </div>
+
+        <!-- PRIMARY ACTION BUTTON -->
+        <button id="btnFireAction" type="button" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm shadow-sm transition flex items-center justify-center gap-2">
+          <span>🚀</span>
+          <span id="btnFireText">Fire Parabolic Projectile (Verify Solution)</span>
+        </button>
+      </div>
+
+      <!-- RECENT SOLVED LOG / STEP-BY-STEP FEEDBACK -->
+      <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Live Mathematical Verification Log</span>
+          <span id="accuracyBadge" class="text-xs font-mono-math font-bold text-emerald-700">Accuracy: 100%</span>
+        </div>
+        <div id="verificationLog" class="text-xs font-mono-math text-slate-700 space-y-1 max-h-24 overflow-y-auto">
+          <div>• Ready! Click "Start 30s" or solve the active problem to begin the timer.</div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- 30-SECOND CHALLENGE COMPLETE SUMMARY MODAL -->
+  <div id="resultModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-slate-300 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 border-2 border-blue-200 text-3xl">
+        🏆
+      </div>
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">30-Second Blitz Complete!</span>
+        <h2 id="modalHeadline" class="text-2xl font-extrabold text-slate-900 mt-2">Outstanding Mathematical Reflexes!</h2>
+        <div id="modalStars" class="text-2xl mt-1">⭐⭐⭐</div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Final Score</div>
+          <div id="modalFinalScore" class="font-mono-math text-xl font-extrabold text-blue-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Solved</div>
+          <div id="modalSolvedCount" class="font-mono-math text-xl font-extrabold text-emerald-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Peak Streak</div>
+          <div id="modalPeakStreak" class="font-mono-math text-xl font-extrabold text-amber-600">0 🔥</div>
+        </div>
+      </div>
+
+      <div id="modalSummaryNote" class="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 text-left font-mono-math space-y-1 max-h-32 overflow-y-auto">
+      </div>
+
+      <div class="flex items-center gap-3 pt-1">
+        <button id="btnPlayAgainModal" type="button" class="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-sm transition">
+          ▶ Play Another 30s Round
+        </button>
+        <button id="btnCloseModal" type="button" class="px-4 py-3 rounded-xl border-2 border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm transition">
+          Practice
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASSROOM MOBILE QR CODE GENERATOR MODAL -->
+  <div id="qrModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-slate-300 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 text-center">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div class="text-left">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Android &amp; iPhone Ready</span>
+          <h2 class="text-lg font-extrabold text-slate-900 mt-0.5">Scan to Play on Mobile</h2>
+        </div>
+        <button id="btnCloseQR" type="button" class="w-8 h-8 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-600 text-left">
+        Enter your deployed website URL below. Students can point their <strong>Android</strong> or <strong>iPhone</strong> camera at this QR code to launch <strong>MathBlitz 30s</strong> immediately:
+      </p>
+
+      <div class="flex items-center gap-2">
+        <input id="qrUrlInput" type="url" placeholder="https://www.futurelabgalaxy.com/mathblitz.html" class="flex-1 px-3 py-2 rounded-xl border-2 border-slate-300 font-mono-math text-xs text-slate-800 focus:border-blue-600 outline-none" />
+        <button id="btnCopyQRUrl" type="button" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">Copy</button>
+      </div>
+
+      <div class="flex flex-col items-center justify-center bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-inner">
+        <div id="qrCanvasContainer" class="flex items-center justify-center min-h-[180px]"></div>
+        <span id="qrStatusCaption" class="text-[11px] font-mono-math text-slate-500 mt-2 break-all"></span>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button id="btnDownloadQR" type="button" class="flex-1 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs sm:text-sm shadow-sm transition">
+          ⬇ Download QR Code PNG
+        </button>
+        <button id="btnDoneQR" type="button" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs sm:text-sm transition">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // --- WEB AUDIO SYNTHESIZER (No external audio files required) ---
+      let audioCtx = null;
+      let isMuted = false;
+
+      function ensureAudio() {
+        if (isMuted) return null;
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      function playSound(type) {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'hit') {
+          const freqs = [523.25, 659.25, 783.99, 1046.5];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now + idx * 0.055);
+            gain.gain.setValueAtTime(0.14, now + idx * 0.055);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.055);
+            osc.stop(now + idx * 0.055 + 0.24);
+          });
+        } else if (type === 'miss') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.28);
+        } else if (type === 'tick') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        } else if (type === 'finish') {
+          const freqs = [440, 554.37, 659.25, 880];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.36);
+          });
+        }
+      }
+
+      // --- QUESTION BANKS FOR CLASS 10 & CLASS 11 ---
+      const QUAD_PROBLEMS = [
+        {
+          id: 'q1',
+          title: 'Launch the rocket through orbital booster ring (4, 6) to strike the target station at (8, 2)!',
+          hint: 'Vertex Form: y = a(x - 4)² + 6. Plug in (8, 2): 2 = a(4)² + 6 ⇒ 16a = -4 ⇒ a = -0.25.',
+          a: -0.25, h: 4, k: 6,
+          startX: 0, startY: 2,
+          targetX: 8, targetY: 2,
+          choices: [
+            { label: 'y = -0.25(x - 4)² + 6', a: -0.25, h: 4, k: 6, correct: true },
+            { label: 'y = -0.50(x - 4)² + 6', a: -0.50, h: 4, k: 6, correct: false },
+            { label: 'y = -0.25(x - 6)² + 4', a: -0.25, h: 6, k: 4, correct: false },
+            { label: 'y = +0.25(x - 4)² + 6', a: 0.25, h: 4, k: 6, correct: false }
+          ]
+        },
+        {
+          id: 'q2',
+          title: 'Launch the rocket from pad (0, 1) through apex ring (3, 5.5) to hit target station (6, 1)!',
+          hint: 'y = a(x - 3)² + 5.5. Since (6, 1) is 3 units right of vertex: 1 = 9a + 5.5 ⇒ 9a = -4.5 ⇒ a = -0.50.',
+          a: -0.5, h: 3, k: 5.5,
+          startX: 0, startY: 1,
+          targetX: 6, targetY: 1,
+          choices: [
+            { label: 'y = -0.50(x - 3)² + 5.5', a: -0.5, h: 3, k: 5.5, correct: true },
+            { label: 'y = -0.25(x - 3)² + 5.5', a: -0.25, h: 3, k: 5.5, correct: false },
+            { label: 'y = -0.50(x - 5.5)² + 3', a: -0.5, h: 5.5, k: 3, correct: false },
+            { label: 'y = -0.75(x - 3)² + 5.5', a: -0.75, h: 3, k: 5.5, correct: false }
+          ]
+        },
+        {
+          id: 'q3',
+          title: 'Guide the rocket through peak ring (3, 4.5) to strike the ground radar target at (6, 0)!',
+          hint: 'Root at x = 6 and symmetry about h = 3 means roots are x = 0 and x = 6: y = -0.5(x - 3)² + 4.5.',
+          a: -0.5, h: 3, k: 4.5,
+          startX: 0, startY: 0,
+          targetX: 6, targetY: 0,
+          choices: [
+            { label: 'y = -0.50(x - 3)² + 4.5', a: -0.5, h: 3, k: 4.5, correct: true },
+            { label: 'y = -0.30(x - 3)² + 4.5', a: -0.3, h: 3, k: 4.5, correct: false },
+            { label: 'y = -0.50(x - 4.5)² + 3', a: -0.5, h: 4.5, k: 3, correct: false },
+            { label: 'y = -1.00(x - 3)² + 4.5', a: -1.0, h: 3, k: 4.5, correct: false }
+          ]
+        },
+        {
+          id: 'q4',
+          title: 'High-altitude rocket launch! Peak at orbital gate (5, 8) to hit the satellite target at (9, 4)!',
+          hint: 'y = a(x - 5)² + 8. At (9, 4): 4 = a(9 - 5)² + 8 ⇒ 16a = -4 ⇒ a = -0.25.',
+          a: -0.25, h: 5, k: 8,
+          startX: 0, startY: 1.75,
+          targetX: 9, targetY: 4,
+          choices: [
+            { label: 'y = -0.25(x - 5)² + 8', a: -0.25, h: 5, k: 8, correct: true },
+            { label: 'y = -0.40(x - 5)² + 8', a: -0.4, h: 5, k: 8, correct: false },
+            { label: 'y = -0.25(x - 4)² + 8', a: -0.25, h: 4, k: 8, correct: false },
+            { label: 'y = -0.50(x - 5)² + 6', a: -0.5, h: 5, k: 6, correct: false }
+          ]
+        },
+        {
+          id: 'q5',
+          title: 'Steep rocket trajectory! Pass apex ring (3, 8) to strike the drone target at (5, 4)!',
+          hint: 'y = a(x - 3)² + 8. Substitute (5, 4): 4 = a(2)² + 8 ⇒ 4a = -4 ⇒ a = -1.00.',
+          a: -1.0, h: 3, k: 8,
+          startX: 1, startY: 4,
+          targetX: 5, targetY: 4,
+          choices: [
+            { label: 'y = -1.00(x - 3)² + 8', a: -1.0, h: 3, k: 8, correct: true },
+            { label: 'y = -0.50(x - 3)² + 8', a: -0.5, h: 3, k: 8, correct: false },
+            { label: 'y = -1.00(x - 4)² + 6', a: -1.0, h: 4, k: 6, correct: false },
+            { label: 'y = -0.25(x - 3)² + 8', a: -0.25, h: 3, k: 8, correct: false }
+          ]
+        }
+      ];
+
+      const TRIG_PROBLEMS = [
+        {
+          id: 't1',
+          title: 'Tower height = 20 m. Target drone is 40 m away at height 60 m. Find elevation angle θ!',
+          hint: 'Opposite Δy = 60 - 20 = 40 m. Adjacent D = 40 m. tan(θ) = Δy / D = 40 / 40 = 1 ⇒ θ = +45°.',
+          towerH: 20, distD: 40, targetH: 60, answerAngle: 45,
+          choices: [
+            { label: 'θ = +45° (tan θ = 1)', angle: 45, correct: true },
+            { label: 'θ = +30° (tan θ = 1/√3)', angle: 30, correct: false },
+            { label: 'θ = +60° (tan θ = √3)', angle: 60, correct: false },
+            { label: 'θ = -45° (Depression)', angle: -45, correct: false }
+          ]
+        },
+        {
+          id: 't2',
+          title: 'Tower height = 15 m. Target receiver is at distance 30√3 ≈ 52 m and height 45 m. Aim laser θ!',
+          hint: 'Δy = 45 - 15 = 30 m. Horizontal D = 30√3 m. tan(θ) = 30 / (30√3) = 1/√3 ⇒ θ = +30°.',
+          towerH: 15, distD: 52, targetH: 45, answerAngle: 30,
+          choices: [
+            { label: 'θ = +30° (tan 30° = 1/√3)', angle: 30, correct: true },
+            { label: 'θ = +60° (tan 60° = √3)', angle: 60, correct: false },
+            { label: 'θ = +45° (tan 45° = 1)', angle: 45, correct: false },
+            { label: 'θ = -30° (Depression)', angle: -30, correct: false }
+          ]
+        },
+        {
+          id: 't3',
+          title: 'Cliff tower is 50 m tall. Ground target is at distance 50 m (height 0 m). Find depression angle θ!',
+          hint: 'Looking down from 50 m to 0 m: Δy = -50 m, D = 50 m. tan(θ) = -50 / 50 = -1 ⇒ θ = -45°.',
+          towerH: 50, distD: 50, targetH: 0, answerAngle: -45,
+          choices: [
+            { label: 'θ = -45° (Depression, tan = -1)', angle: -45, correct: true },
+            { label: 'θ = -30° (Depression)', angle: -30, correct: false },
+            { label: 'θ = +45° (Elevation)', angle: 45, correct: false },
+            { label: 'θ = -60° (Depression)', angle: -60, correct: false }
+          ]
+        },
+        {
+          id: 't4',
+          title: 'Tower height = 10 m. High-altitude beacon is 25 m away at height 10 + 25√3 ≈ 53.3 m. Aim θ!',
+          hint: 'Δy = 25√3 m, D = 25 m. tan(θ) = (25√3)/25 = √3 ⇒ θ = +60°.',
+          towerH: 10, distD: 25, targetH: 53.3, answerAngle: 60,
+          choices: [
+            { label: 'θ = +60° (tan 60° = √3)', angle: 60, correct: true },
+            { label: 'θ = +30° (tan 30° = 1/√3)', angle: 30, correct: false },
+            { label: 'θ = +45° (tan 45° = 1)', angle: 45, correct: false },
+            { label: 'θ = +15°', angle: 15, correct: false }
+          ]
+        },
+        {
+          id: 't5',
+          title: 'From a 40 m lighthouse, aim down at a buoy 40√3 ≈ 69.3 m away on sea level (0 m)!',
+          hint: 'Δy = -40 m, D = 40√3 m. tan(θ) = -40 / (40√3) = -1/√3 ⇒ Depression angle θ = -30°.',
+          towerH: 40, distD: 69.3, targetH: 0, answerAngle: -30,
+          choices: [
+            { label: 'θ = -30° (Depression 30°)', angle: -30, correct: true },
+            { label: 'θ = -60° (Depression 60°)', angle: -60, correct: false },
+            { label: 'θ = -45° (Depression 45°)', angle: -45, correct: false },
+            { label: 'θ = +30° (Elevation 30°)', angle: 30, correct: false }
+          ]
+        }
+      ];
+
+      const MATRIX_PROBLEMS = [
+        {
+          id: 'm1',
+          title: 'Rotate the Fox Face 90° counter-clockwise about the origin to match the golden target pose!',
+          hint: 'A 90° CCW rotation maps (1,0) → (0,1) and (0,1) → (-1,0), giving M = [[0, -1], [1, 0]].',
+          targetM: [0, -1, 1, 0],
+          choices: [
+            { label: '[[0, -1], [1, 0]] (90° CCW)', m: [0, -1, 1, 0], correct: true },
+            { label: '[[0, 1], [-1, 0]] (90° CW)', m: [0, 1, -1, 0], correct: false },
+            { label: '[[-1, 0], [0, -1]] (180°)', m: [-1, 0, 0, -1], correct: false },
+            { label: '[[0, 1], [1, 0]] (Reflect y=x)', m: [0, 1, 1, 0], correct: false }
+          ]
+        },
+        {
+          id: 'm2',
+          title: 'Reflect the Fox Face across the Y-axis (x → -x, y → y) so its star badge flips to the target!',
+          hint: 'Reflection across the Y-axis negates x and preserves y: M = [[-1, 0], [0, 1]], det(M) = -1.',
+          targetM: [-1, 0, 0, 1],
+          choices: [
+            { label: '[[-1, 0], [0, 1]] (Reflect Y-axis)', m: [-1, 0, 0, 1], correct: true },
+            { label: '[[1, 0], [0, -1]] (Reflect X-axis)', m: [1, 0, 0, -1], correct: false },
+            { label: '[[-1, 0], [0, -1]] (Origin Invert)', m: [-1, 0, 0, -1], correct: false },
+            { label: '[[0, -1], [-1, 0]] (Reflect y=-x)', m: [0, -1, -1, 0], correct: false }
+          ]
+        },
+        {
+          id: 'm3',
+          title: 'Scale the Fox Face uniformly by 1.5× (Area Scale = 2.25×) to match the enlarged target face!',
+          hint: 'Uniform scaling by k = 1.5 uses diagonal matrix M = [[1.5, 0], [0, 1.5]] with det(M) = 2.25.',
+          targetM: [1.5, 0, 0, 1.5],
+          choices: [
+            { label: '[[1.5, 0], [0, 1.5]] (1.5× Scale)', m: [1.5, 0, 0, 1.5], correct: true },
+            { label: '[[2.0, 0], [0, 1.0]] (X-Stretch)', m: [2, 0, 0, 1], correct: false },
+            { label: '[[0, 1.5], [1.5, 0]] (Swap+Scale)', m: [0, 1.5, 1.5, 0], correct: false },
+            { label: '[[1.5, 1], [0, 1.5]] (Shear+Scale)', m: [1.5, 1, 0, 1.5], correct: false }
+          ]
+        },
+        {
+          id: 'm4',
+          title: 'Apply a Horizontal Shear (x\' = x + y, y\' = y) to slant the Fox Face into the target pose!',
+          hint: 'Horizontal shear keeps y unchanged and adds 1·y to x: M = [[1, 1], [0, 1]], det(M) = 1.',
+          targetM: [1, 1, 0, 1],
+          choices: [
+            { label: '[[1, 1], [0, 1]] (Horizontal Shear)', m: [1, 1, 0, 1], correct: true },
+            { label: '[[1, 0], [1, 1]] (Vertical Shear)', m: [1, 0, 1, 1], correct: false },
+            { label: '[[1, -1], [0, 1]] (Reverse Shear)', m: [1, -1, 0, 1], correct: false },
+            { label: '[[2, 0], [0, 1]] (Horizontal Scale)', m: [2, 0, 0, 1], correct: false }
+          ]
+        },
+        {
+          id: 'm5',
+          title: 'Reflect the Fox Face across the line y = x (swapping x and y coordinates) onto the target!',
+          hint: 'Reflecting across y = x maps (x, y) → (y, x), so basis vectors swap: M = [[0, 1], [1, 0]].',
+          targetM: [0, 1, 1, 0],
+          choices: [
+            { label: '[[0, 1], [1, 0]] (Reflect y = x)', m: [0, 1, 1, 0], correct: true },
+            { label: '[[0, -1], [-1, 0]] (Reflect y = -x)', m: [0, -1, -1, 0], correct: false },
+            { label: '[[1, 0], [0, -1]] (Reflect X-axis)', m: [1, 0, 0, -1], correct: false },
+            { label: '[[0, -1], [1, 0]] (Rotate 90° CCW)', m: [0, -1, 1, 0], correct: false }
+          ]
+        }
+      ];
+
+      // --- APPLICATION STATE ---
+      const state = {
+        navMode: 'quad',         // 'quad' | 'trig' | 'matrix' | 'blitz'
+        activeTopic: 'quad',     // actual topic of current problem
+        problemIndex: { quad: 0, trig: 0, matrix: 0 },
+        currentProblem: QUAD_PROBLEMS[0],
+
+        // 30-second timer state
+        timerRunning: false,
+        timeRemaining: 30.0,
+        lastFrameTime: 0,
+        lastTickSecond: 10,
+
+        // Scoring & progression
+        score: 0,
+        streak: 0,
+        peakStreak: 0,
+        solvedCount: 0,
+        attemptCount: 0,
+        bestScore: 0,
+        roundHistory: [],
+
+        // User sandbox inputs
+        quad: { a: -0.25, h: 4, k: 6 },
+        trig: { angle: 30 },
+        matrix: { a: 1, b: 0, c: 0, d: 1, animProgress: 1, prevM: [1, 0, 0, 1] },
+
+        // Canvas animation state
+        animating: false,
+        animStartTime: 0,
+        animDuration: 650,
+        animResult: null,
+        particles: []
+      };
+
+      // Load best score safely
+      try {
+        const saved = localStorage.getItem('mathblitz_best_30s');
+        if (saved) state.bestScore = parseInt(saved, 10) || 0;
+      } catch (e) {
+        // Ignore storage error in restricted iframe
+      }
+
+      // --- DOM REFERENCES ---
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Preloaded Visual Simulation Sprites (Real Observation Tower & Cute Fox Animal Face)
+      const towerImg = new Image();
+      towerImg.src = "data:image/png;base64,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";
+      const animalImg = new Image();
+      animalImg.src = "data:image/png;base64,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";
+      const animalTargetImg = new Image();
+      animalTargetImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAMAAAAJixmgAAAA/1BMVEW0Xwq5Zwvalxn+yyfMgxPvtiHlpx3EdxD+yyfOhhTOhhTZlRjQiRXFeRDlqB2/cA65ZwzalxnHexHwtyHgnxvjpRzFeBDYlRjrryDrryC/bw6/bw6/cA7gnxvrryAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA49F6MAAAAQHRSTlMAeXp6eXp6eAcCTy81ARB5AQ5XEnonMUsbeitcXQ4iAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAsqzAAAGLZJREFUeNrlnQmX6yqOgBMiUOzsqdR93bP9/5/Z8QJISMJ2kqpK3eGcmdOvbuzwRQtCgFitSDusLnhv13Z/3Hb/3ax+Zeu7vT3u22tHs7M/eFntcD00xHa3/Z3IXZe3uxYTys6muKxpw/Zz++twz/f/O7bIOHZ3Uartg33u3k643/423O0OSww8GqrQrmXD9mP42X4H7nGPCkS7VXmP2mdH5N/RCl3OCJ+KGZ9VAf8aKR/uFmng3ttVe2QrP44ZefvWHvvetW3GVUA+VkfxyE4Vbvof7+2+tvsKbmfFnQoUDXR1RuLd31Ov7yg7lP3lGNuaRrOHTvm/2uMb6jXT5hOeVGF1Ot2YGu02Gx+APofvrNdbEh4SSaHzm01I/7kvdJr4aNj0zYNC3Dn4dxLyvSsXVLq5xjBQuGzEZUsf9puxefoqrA7iPxZpbFutjxH33tAy4mTCsMntpr5t9yZCbrizyj10BMHl8PLI50lCwEzI+H5CPhTiRSnersWP8DlT9lm44c1lZ/1uQmbWm9yz8xwAkhE3zBiuijr0LWhC7iKvww/zkrHIFO8mO+rWCDt8+UB210yt8fLD8wRU1Vl2P+o06j7rJB/YeEdfncfk1ernoHdMvMnhegUYVTcd5/6gAfugEXe+6/wW3gqT+Sq8yQtd1OSO2+jEqBF3UchPDL6FOsf/CipvMmLqpi+rz/jQRif2OvHuR9V5Fu/Gp+DyogzD+jOC+ETU+lvHp+Y+EVxrvGjxbjZjZ/+QceWw+qOPwpQY6LekH/n68Z2GLM038nqTN3qtVps6mMA28T1mO3yffP+Fi3lj6NFqwzBQwrnE+58zX8Jbdle4aZ7Xugon7QoH5k3i9T/fxVua7+hLJG+gonPaQCyBoRyUM3H3VeCCAzQnm1/S/onBxvDl8TeXvI4ZZ9CA/0eMSigiNUoMzoV7g+8kblO8fG+uI9Z5hwGlDhwjy1CGoKEkHr/EdY0QX798xpjcM/S492bwhnKA9SmtJYHFp5ha+0zsvpt4eyW8FDgUwE6EUF5ZYZLAYV0lhkTs8oD8ZSHIkct34AWVF5S0hxJMV4CZIXdvH/5FEuMXBl3byNF94W34apUX1wrwGGo1CrDUDJPYacTfwTt+MY7zI8rrSZoWxK/QKLNDRTUK0+6ay35rcNbjTwjbL/bPJS94Bkx5nwMuiaEkxq8kTv7KJfvVefniShV4OwFcElPHdSPEX+Crz0y+Iy+kAcnifRa4IC4dVyL+gghkL3mJw/IG72JgsQjnmYhLxxVCZV3yqfngTuHNDsubHX4aGCccl0uZlBcSN6u47it4oc6rAF9mAos1GC/MuCB+2XB8Scl2yksM2JcWiDawGmlpNowxTVsQU6WmxPcXv4w4JVMJr2bAsYd0yVMAf8x1WvfXjlbDiG9Uqenc6XUByFbjJQbsWVjYLbJUVFqdD3sNGNKKS2AiBqrUlPhFi22HOCAxXkWhff/Ll/Hh48DjXzvkihk7NjjZSn25NM3hcL63w+HQXC4Vh7Vj81+q0NyAccRNUXMRaWmK15bA5LdKqnxLP5vPY1NSakKMO7lL6FJNbp4vjZghjfn2E+NVFBpSB50aWo4j9H9rSbygAmfTdlypHROxy8MxdRDHJqFut8fL5263//Pnz391/2+/330eL9v0058PR2nATig0cAMGdWwSwFctPDeAnZq2jUrtFFc9xh/NOCZvPy67P/325XIbFXYJo2v7Z3f5GLnPzaDQmgFThZZ52Zve5yCBUyLeKfNh7r03U0oNaTQelHT7r10LaG4KZJuF2t24Yfku6b3Gqyj0xgiWBErLA5pSDzgwWMQglZqMetvj/jqHlVJf28s2KzR3WNRDe3OZ0FDWVtviAdbcwxvAPPzoiUfFgo99y7aJLaBu9x+tmAFHAQeD1+wxyLWlPAJ4dTKtrsF4GVOzDMhjsDxEBMZLPZa3VlRi7loA7/muFpHNKeaHzhIx91sskynUFQDiBHpofXoKTBPnCu2qCh2KR4Xo+EGAI5Z7Qtx6nlIHKeJwkqjjJNJsObFO7VAK2FnAxaMgduU0WtSKlpvWlNqrfoum9frnYAKVYQM1e27AdQGXWuUE8EUFNr2W4qm9LmKi1ItgCXRWaKd7LF/30NxJK5OltNUSwfJa2nYIQ8QuBlwP0I7MUaHdTI8VhPUTZ4TqHC6ukgWxPUuasefAvhSxG0XshJ1aTQOGaQF7SxvXRHARuEgNXqMOit1ZGrGfFDFGJzuBqmKDVGhFwHS6VLa8ATGMwFDmjgRwWNeI+2+riNhFLzsTlkHjoB6uJmBf471/MpnwCHxVN5feR8psoKhspmfabIt4VGq3kHZ81g0CdraAi+mwOLiAJNs1Ahdxxxh53IG9qtP+dlKIveWoO2Lxp9lN+a2YgLkdx1kkFZAj/zwCF3FHTJcB3FSddsm9B41Yith1In4QGHuPxf5Ex2CR3hkOODhVo0MEblZq5AGGTveco+9ViFURIws5F7Te+icETMcjCMUwSjTaIRhHtRJwVlqW5hne0fk89JIYioh6FDE8CAzB1QWc4qsTDNLUOjuYMBip1DguYRDbDflWRn9zs0Ts7iE1PGjChYBZFE2AnfO6OmYNQHUYzinR+7+T7DOwoVwEOLQHqIr4QeC5AiY9cbyrRKPjqHRWc6LIdDrwoa1G7KTbcuExrwXr4OoClt1gPb0RjY7A5SJfM+7quwNTnQYWnlaJNZ2Gh4CxFHDpspROYNHRPCilUanRl3GA6XRYF0ptEysj072rD0lY8dpUo5Uu8Bwr02g4KceW+LhEdJpPmZz8vtyLoAHDK4DHwVAHJqvVUsCdjwZ1cnifPmyjm4467YVtKLPR5KUB19JtvaaN/Qre/HYhlk1cHbJHpXNy0zH28MKKiV7xH9jFcNYtny1MzyXS2yHI7xa8g4D9OHGIJnzdnsW4tM/A43REiphHd1G4lPa1vHHK6MhGf9FQaOE4c/SQgFuxb7+JB1u6DzkiYlcnTjuWvgSXIIOFjGvpWQfgGwKoUwfhtWCTRVwmqIOKG74KlyQGdGSUAompAcg+S9uVkPJ40W3RqFHxXFmZvxZXIkMQv7jmVnuXBZVNCcRrAXUKTuSL2N+/HldBnuiaTwJGc8McDS65iEU6D13+baOr+mLe0n31eh3E3iw6igwCRrUCAF19OIEQsczYovtW8TIhx292MpXFRk0gwPpWKuq1ehHzyZ+19vNNuATZWoANUsBWnCWNGFigrBPDN/OWQhapWQpMBaz7rIaGHr2IfZUY3XfjZuQbVnl9EjBWdhU1cZ/fIGHwdWIMP8FbumuLdzNCaCla3Yj7WaIWY/yYOleJscjwjQKum3DOa0URe5mLpZt5fwKXDFDa+BuBmYCtvZDciPuImr/HvQevJHZFeN1P/KkJHwzg44kasRBxFPLph3mL8QnKXg7TpK71PCe5L1AJp4ehSQXG8NO8nFjM4KJCVwNpkQQYlPpNeROyRpw8lpGhVfavpl/I5nU/3ghx2U9gwLUt+qVOg/RZ78JrEwNyjf6YPiOUnkBX8rq34Y3EpZ92yAVcOz0mdToTh7fjHYkdJw6wQKMVnU7ZhVOOr5x7Q+JQGvAMjVZ0OpkxLuPNp16fSM/OJaabbKEUcDtxMvkTuU6PxC476CXbcZ4aZOd/VXZcrhTw5DEqqdPgogHPZwhPIBdbT2d9PJqxw1LAU2eKYj7+BIx4scN6nHjpkze6dQ8UjZ46NfYhRQz4gMN6kHj5Y8SMaZ9h9jE56bZwkQE/RfzIQyTGFALGGec5y6E4rgtOdyNaQNn75bw365XmU7dSTPNPfgq3pZwuUWDZRjh4jJh/nu6dRoSJ56CImGYfgzyUIkZlM77T1qx5zgWSR1kMnPc5lMnw2oN8PF3PdFlSxDMU2ijpTJMTSxIZU6+0XLXsNc6qbn9Ih5hIAF7pNZhHU6CzwaXAk6+0IzNCvOx8PhXxekqhkZS3YlW2eoncp2rLgDsHheWJNfLuE8wxY7QqwxsB9X6d9nsop0sK8fLRj5/J6eOXJcC5t/nkTxERwAwzXmLBRMQnYsA3wzeDcyAaOYnfDyqzgZWHeRu/0iCOSo21Czwq+do1zhiRQG3IiWfvWCqf1JCnzVgWspxsaB4PEyKGOvIS4Oxu1vZ7YXo0XlyKoCHlBdc1B11ruFjE5VNmmxyNhyDruIS4XSsVUpbwxjT4GhcBz+GtEaflCLkza6JEmVZRYhlvDNLmipg/8QgxrSbyf4uKQZ9jSTZ8hnfoP8JMYv7AQ8jEjJdJOLnp53h7gLnAMQaex1shTrU1zgt8FnFYt9m8fYFPWDiaTP6C5luniPfLfbTtsGSvTnZ4NItYZ60EXTCR4podSp/Vkl3V3sltTa8AnnzrlOM6/TOHOJfsgpm86lQOlxJP4ipvnSK+a/V5Wr47XMRrbZrCZcCzeMVrZxBP++cneJFfd/QE8Fq7/ej1xKQCOy/pZPYNS5+Cy/pmAMuXoD6p4O/QiNutHYEctBKwfWemeDE40dNFxCZvTlPlMNl6KWjFvdb2LSuHfLXlQl63CeNCo97XhcByS3D37yGfH11GjGbd/k+DF4yekbO26aQE8NPLjwDHBBMpp+GH9wdNdfhbNK1Wr6M4kArslBdMXnqfU0gHJWJBLYe1ntWAkb1gPL07iDjL2CbWCjFKtW5Wq4+rVi+keKPmnU9jfxhw2s68HDimtQWwY/VYUHsx+09K3F0e1NDBN41GwyZZ1g1dDidawqX/l0ALEChTvXnAyB6nKg283CaYxKAkBOiFfnfc45UmdIpO2NEfxvLzw8c8uT0wr9EsBOZPj/tGhw/EUv2VKK74C036xBui+ltOT0Sd08JOhTe9biz+CFDkV7ouuwUiLnIGjo/ovdJ1wJ6JpELcdWDsY96S2V1UeWDXfva1FdJ6cPEu+fLbWLziDuyKvfk5//8IcBnCjEe1BqfF8twV4v6r+z9l6+sqbv5jRK0WL4/h3GBldFl69FlJxMtUOgmYrLfEpelBo115Xl7vp051aml+UguSKrhEp0MJ7IITIi4Xv4ICnK2AqGJcn+qHABQhPuhd1bH26qXbopeWjKKIveM7mHFcNTGA5bqx0GhHDGR8eYgCDtWVeDCJsXfV3ej0Wd7NzDtp62SIVuz4AZvRy4wVZaydAYotYi/QwQc6frrCbZwqYNFDgxjbz8FH98jbS3tVJiTqYKQpNRfxoIP3YNBpwFrFKdpHF50+MAEPZQaKJJvaOW0q1zbbVY49juehkOo/5ZhupNa4cg79uJHdNOMxjMHoSneg1tiiXby7BCAHOeJxkiCrxlmdK4hhLAbL1hK7oqrHMv510znSKNZ8NhAhnvj1Q6UcLAdvhZj2sKtnDeltaV+A4K10riDexQKwRvnqaV4lYkUoKtv1sycC7HTgG+19BE7EqaQYqlH+ZEsTxMZeTpqbCBfXPBDkm+tC/cBiLZ2Xizi+p5t/Ud+GZYWBuX1M9080K+tI/GxeJjNg+5UAkAbD5NO3YBCXbqZfiB2DXD4aL+ElSt2I1SRlyj4TWT8bt9aAw0xgGfjdHsG1N2zl6rTwALHjBSlJXq9YTbOqlkaK+HFexTf7weW85n4PZdvwvIWeck9Z+msaWZYBQ/Jl8U3qAEb6g7NE/FHUxNtPKDTm+rJOd9c33RvhNHAgq6Wnqi8veV349/grV7BPmojrAu5v/Yv1w9ySRZROpXCKlwLjvFlk3q4fC/g5k1nZlVcXcEdLKr3i/KXB8fH5wICTrys750iZRoNZ2SpuCxgRAr1ee/76tPzXWrFl9YF5C/Ckf0FFFo5a2SOdclbsFvKAMxfl9X9ZAlx/He/lrbjxHHVHncdi7fDOuF2BVRx2C8csdbxeQjx3qHXlxZaoifha12gUddJ7+aZhYMaAMFvAS4FpJyTxkBhRzz9o+4XJ9puiNtnwNS6dth/KnOMrBLwgpBiGR94HwOImXVAPQMR6LYpGS/H29fSCrK8YKrsPFwNPEtt98LKi+AmtQ2pbVM4LlPXCc9FMUb57inmad5aIVdo0IpV/QXluA7fs6D87dYvyd9zYzVeR3XxgV8N1tS4YF5mgctC0KO6Axj0W9ebda4AraQy/tE8gzkDEfUzUhB/j7ZFxMjXyMDAp1v8gMT22xaosPcq7GRaJ69mvh4nDYz2CfIwyG3FD62g9w9sX3BcxzkwB0yuk0JohPEicj32culqAB1Ip7TleGYthcRfTHGBBjO6JDhWrzZ3XIgUt0biU5VFiLC4mmgecZtAv4M3EMbo8EJ/1Al5GjOUVLjOBHR1An+SNd17EhXZyiQegfj/Jw8QobnCZCwysWMyT7d90TxDSy7rKK7V8rWR3zVGQ6NQCNv+UTrtF4iXC1HtMj/ZQYHrHkFfbbF+dlgHVo7J0FyG5rqc8zjhMg/xDsLzHlO9ILkTt2r/NZxcwxyLHqGz5BO38pNx3HwNh9wRt6jG9uqYLLS/s+or6o7OVOgk4w7BkfTfVPNEVfl6+A4o7J56CpldefObr0oaV/KeUOYsYRwGHNIEbr2Apdx1h3kxD8qKjiHGpB7W6T09vkR2WXbB1/42fpE0BDs119hBGnjBe+RrYhNO4bXExc3EtGQfO9349CeyGOnJ8bmHmvZHfCDXORF4ALBZ/hv3in6itf4VnxAzrMv8XpW6u/uBGSdI8I9ygrsxZwM8xe+WiRG+v1akRXlgY9c2hpcDqpZvo5pqzzy4nZg2ta9xY2o+cZ3BKEOxo3sqFuYarl0zAtHP6crk0n5+7P22LYsfWTDH7ITjyWXth6p6+9bp+daYjcVD/djPlUQr3JG69vbZ/9p+fTXP537Lsw/ZT3LBaInvjS/vrLIfICLUc4BQwaHbh0/V8zvxi9UoCcu/r51Y7OX28NGnLeHeHrl33VUfOdy6Rrr4E2KUuLMW9w6Yj04fmoh+fPg7Y2x3bmzctZVIGcujq5FWMUyo96gm5HW4RLl536e7mGactezmjXe1Wu/Eo11XTgP0UcNCAXYW37BG7MHWQ7WHJmfhSzK6OXHwp1u+7Vnyo/QDY36d75kG4h9XCdih2nWI16CxKMuNmoU47Exjtb1O1+bobjjU80PqNtteKkL1x/7IaJOEyAafPm1+lanOP26webQ2PxGpCLkqrT97xPXWd82byyiOltjk+hxuRyaZ5W8jFrx02S4jtT4P1PYp40/7v1bPI2xZNd+29etuTlqvwOJ83DtzGl2iF3NuX4I7u64i2Whf3Poa1PZdV9yfqiSvgGmXwZnUuzp492c70sI/ThcwvOjHSb8otHHreyqO8wsvb6twf0Hlla6iQoU4civtSq0I21o18kAKuqPNrxZuE3FbUml6DAcX1kgUKmataS/oxaNPertwtdRfvefXy1lB3XSUO0d1Y4f54mMFVpiL8ckeNN9CxqFl9TfuAiiF7IWI73kciPu1DzjAdzXyPqy9rZzJAVXtD5GPeg2ndVUndwMRvWj/i/6K2w4ohF/Xz7SEF9Aujo7aeJpQoO/vd6svbZ82QuQBCTQVwAgcrvEmdP7+etyHe2k0otf2BGnARY1XM9/rxZd6Ke+v9etqQUU98Ui8datoaZpnvN/AOhnyaNmRU89vsLAiWSzvpzk6bN5/q362+rZ3j5VtVtQZ2kGc4eq6tcij/av+OtG7D+fuIqSHbau1w/Vib8SNeP76TtzfkdlocJnJ3qs6sMQzT6nxqV99mvsqIXPPWAhnJ6qSyvFd9Fw0mj6vvb9X5ExszIR+6kh9glRncZlqdv2P0nahGNeWtXXUfBvlpcEZwdd3+gDqnEXlayEGOMvoqWFWhkzqf7up8Wf1cO04PJaDPJMo5BVYEzDM5P9kamuBzy+ZOktcKN9z6B4Irs2wv8daGkGm6xkoJoP2LEfHuVz/NO6w1Xtd1S3ZTa0Su8nAerq8fq7dozUSqPuuk0xcRHNq8RLy71RdP9Rflftp1Va+dGUWlLQpgTqtSbaj3aU1X0aeq13mSk2dIbObkqs6KFjx7QyGfXNUWx72W69qCO49K30u8miVrem3e/T31ady9n3hHd91OIKv7xSBUjffUfrwpbudD6fq5Os3jEyREfS5I1B927zH2monrHU5P9YZN0SFMBla9Np9Xb9waXlTw5PziRnwVvm7J90uRj9SUFyJTz9b+6/1xB71eXa51F2zi0rtWLqvf1KgpQ3gAd/ercJsV916zkGH9C0be2ciTpuxOHLf5bcRlFdi696JxVRc2H1a/sZ2nYy9hvNjFVb8Td5QymVNYiT5ivO84S1gs5WNbNWU6Kbqs3juumj1GganX5UbJv6RR7wXGFP/3jUT1MapVcpskYdX+ypGo6r2IKTuRbj7+JcZrhZu9kOHXzAGfyIiQsu/4VftC30qv6TQqr30eVn8v8pYXK/+LxZvTA8jF2/zdxGwb8t8u3iTkwV3j7u8Xb2ydWuNx9f+mNavtFbY/45z/A9UrD6L/iAaUAAAAAElFTkSuQmCC";
+
+
+      const timerDisplay = document.getElementById('timerDisplay');
+      const timerBar = document.getElementById('timerBar');
+      const timerStateLabel = document.getElementById('timerStateLabel');
+      const btnStartChallenge = document.getElementById('btnStartChallenge');
+      const btnStartIcon = document.getElementById('btnStartIcon');
+      const btnStartText = document.getElementById('btnStartText');
+      const btnResetChallenge = document.getElementById('btnResetChallenge');
+
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const streakDisplay = document.getElementById('streakDisplay');
+      const bestScoreDisplay = document.getElementById('bestScoreDisplay');
+      const solvedCountBadge = document.getElementById('solvedCountBadge');
+      const accuracyBadge = document.getElementById('accuracyBadge');
+      const btnMute = document.getElementById('btnMute');
+      const btnSkipProblem = document.getElementById('btnSkipProblem');
+
+      const badgeClassLevel = document.getElementById('badgeClassLevel');
+      const badgeDifficulty = document.getElementById('badgeDifficulty');
+      const challengeTitle = document.getElementById('challengeTitle');
+      const btnToggleHint = document.getElementById('btnToggleHint');
+      const hintBanner = document.getElementById('hintBanner');
+      const hintText = document.getElementById('hintText');
+
+      const canvasEquationPill = document.getElementById('canvasEquationPill');
+      const canvasFeedbackPill = document.getElementById('canvasFeedbackPill');
+      const telemetryLeft = document.getElementById('telemetryLeft');
+      const telemetryRight = document.getElementById('telemetryRight');
+
+      const quickChoiceContainer = document.getElementById('quickChoiceContainer');
+      const controlsQuad = document.getElementById('controls-quad');
+      const controlsTrig = document.getElementById('controls-trig');
+      const controlsMatrix = document.getElementById('controls-matrix');
+
+      const sliderQuadA = document.getElementById('sliderQuadA');
+      const sliderQuadH = document.getElementById('sliderQuadH');
+      const sliderQuadK = document.getElementById('sliderQuadK');
+      const valQuadA = document.getElementById('valQuadA');
+      const valQuadH = document.getElementById('valQuadH');
+      const valQuadK = document.getElementById('valQuadK');
+
+      const sliderTrigAngle = document.getElementById('sliderTrigAngle');
+      const valTrigAngle = document.getElementById('valTrigAngle');
+      const readoutSin = document.getElementById('readoutSin');
+      const readoutCos = document.getElementById('readoutCos');
+      const readoutTan = document.getElementById('readoutTan');
+
+      const matA = document.getElementById('matA');
+      const matB = document.getElementById('matB');
+      const matC = document.getElementById('matC');
+      const matD = document.getElementById('matD');
+      const readoutDet = document.getElementById('readoutDet');
+      const readoutAreaScale = document.getElementById('readoutAreaScale');
+
+      const btnFireAction = document.getElementById('btnFireAction');
+      const btnFireText = document.getElementById('btnFireText');
+      const verificationLog = document.getElementById('verificationLog');
+
+      const resultModal = document.getElementById('resultModal');
+      const modalHeadline = document.getElementById('modalHeadline');
+      const modalStars = document.getElementById('modalStars');
+      const modalFinalScore = document.getElementById('modalFinalScore');
+      const modalSolvedCount = document.getElementById('modalSolvedCount');
+      const modalPeakStreak = document.getElementById('modalPeakStreak');
+      const modalSummaryNote = document.getElementById('modalSummaryNote');
+      const btnPlayAgainModal = document.getElementById('btnPlayAgainModal');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+
+      bestScoreDisplay.textContent = String(state.bestScore);
+
+      // --- HELPER: LOG FEEDBACK ---
+      function addLog(msg, isSuccess) {
+        const div = document.createElement('div');
+        div.className = isSuccess ? 'text-emerald-700 font-bold' : 'text-slate-700';
+        div.textContent = '• ' + msg;
+        verificationLog.prepend(div);
+      }
+
+      function setFeedbackPill(text, tone) {
+        canvasFeedbackPill.textContent = text;
+        if (tone === 'success') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm';
+        } else if (tone === 'error') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-red-600 text-white font-bold text-xs shadow-sm';
+        } else {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm';
+        }
+      }
+
+      // --- LOAD A PROBLEM FOR THE ACTIVE TOPIC ---
+      function loadProblem(topic, advanceIndex) {
+        state.activeTopic = topic;
+        const bank = topic === 'quad' ? QUAD_PROBLEMS : (topic === 'trig' ? TRIG_PROBLEMS : MATRIX_PROBLEMS);
+        if (advanceIndex) {
+          state.problemIndex[topic] = (state.problemIndex[topic] + 1) % bank.length;
+        }
+        const prob = bank[state.problemIndex[topic]];
+        state.currentProblem = prob;
+
+        // Set intentional starting offset on sliders so students can see the change or solve
+        if (topic === 'quad') {
+          state.quad.a = prob.a === -0.25 ? -0.5 : -0.25;
+          state.quad.h = Math.max(1, prob.h - 1);
+          state.quad.k = prob.k;
+          sliderQuadA.value = String(state.quad.a);
+          sliderQuadH.value = String(state.quad.h);
+          sliderQuadK.value = String(state.quad.k);
+          badgeClassLevel.textContent = 'CLASS 10 • QUADRATIC EQUATIONS';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800';
+          btnFireText.textContent = '🚀 Launch Space Rocket (Verify Trajectory)';
+        } else if (topic === 'trig') {
+          state.trig.angle = 0;
+          sliderTrigAngle.value = '0';
+          badgeClassLevel.textContent = 'CLASS 10 • TRIGONOMETRY (HEIGHTS & DISTANCES)';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
+          btnFireText.textContent = 'Fire Laser Pulse (Verify Angle θ)';
+        } else {
+          state.matrix.prevM = [1, 0, 0, 1];
+          state.matrix.a = 1;
+          state.matrix.b = 0;
+          state.matrix.c = 0;
+          state.matrix.d = 1;
+          state.matrix.animProgress = 1;
+          matA.value = '1';
+          matB.value = '0';
+          matC.value = '0';
+          matD.value = '1';
+          badgeClassLevel.textContent = 'CLASS 11 • MATRICES & LINEAR TRANSFORMATIONS';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-800';
+          btnFireText.textContent = '🦊 Morph Animal Face with 2×2 Matrix';
+        }
+
+        badgeDifficulty.textContent = 'Challenge #' + (state.problemIndex[topic] + 1);
+        challengeTitle.textContent = prob.title;
+        hintText.textContent = prob.hint;
+
+        // Toggle visible control panel
+        controlsQuad.classList.toggle('hidden', topic !== 'quad');
+        controlsTrig.classList.toggle('hidden', topic !== 'trig');
+        controlsMatrix.classList.toggle('hidden', topic !== 'matrix');
+
+        renderQuickChoices(prob, topic);
+        updateReadouts();
+      }
+
+      // --- RENDER 4 FAST-SOLVE CARDS (SHUFFLED DETERMINISTICALLY OR RANDOMLY) ---
+      function renderQuickChoices(prob, topic) {
+        quickChoiceContainer.innerHTML = '';
+        const shuffled = prob.choices.slice().sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((choice) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'px-3 py-2.5 rounded-xl border-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50/60 text-left font-mono-math text-xs font-bold text-slate-800 transition flex items-center justify-between gap-2 active:scale-[0.98]';
+          const spanText = document.createElement('span');
+          spanText.textContent = choice.label;
+          const spanArrow = document.createElement('span');
+          spanArrow.className = 'text-blue-600 font-sans text-xs';
+          spanArrow.textContent = '⚡';
+          btn.appendChild(spanText);
+          btn.appendChild(spanArrow);
+
+          btn.addEventListener('click', () => {
+            // Auto-start 30s timer if user clicks a fast-solve card!
+            if (!state.timerRunning && state.timeRemaining === 30.0) {
+              startTimer();
+            }
+            if (topic === 'quad') {
+              state.quad.a = choice.a;
+              state.quad.h = choice.h;
+              state.quad.k = choice.k;
+              sliderQuadA.value = String(choice.a);
+              sliderQuadH.value = String(choice.h);
+              sliderQuadK.value = String(choice.k);
+            } else if (topic === 'trig') {
+              state.trig.angle = choice.angle;
+              sliderTrigAngle.value = String(choice.angle);
+            } else {
+              state.matrix.prevM = [state.matrix.a, state.matrix.b, state.matrix.c, state.matrix.d];
+              state.matrix.a = choice.m[0];
+              state.matrix.b = choice.m[1];
+              state.matrix.c = choice.m[2];
+              state.matrix.d = choice.m[3];
+              matA.value = String(choice.m[0]);
+              matB.value = String(choice.m[1]);
+              matC.value = String(choice.m[2]);
+              matD.value = String(choice.m[3]);
+            }
+            updateReadouts();
+            triggerFireAndVerify(true);
+          });
+
+          quickChoiceContainer.appendChild(btn);
+        });
+      }
+
+      // --- UPDATE LIVE FORMULA READOUTS ---
+      function updateReadouts() {
+        const topic = state.activeTopic;
+        const prob = state.currentProblem;
+
+        if (topic === 'quad') {
+          const a = parseFloat(sliderQuadA.value);
+          const h = parseFloat(sliderQuadH.value);
+          const k = parseFloat(sliderQuadK.value);
+          state.quad.a = a;
+          state.quad.h = h;
+          state.quad.k = k;
+
+          valQuadA.textContent = a.toFixed(2);
+          valQuadH.textContent = h.toFixed(1);
+          valQuadK.textContent = k.toFixed(1);
+
+          // Expanded Standard Form: y = Ax^2 + Bx + C
+          const A = a;
+          const B = -2 * a * h;
+          const C = a * h * h + k;
+          const disc = B * B - 4 * A * C;
+
+          const signB = B >= 0 ? '+ ' + B.toFixed(2) : '- ' + Math.abs(B).toFixed(2);
+          const signC = C >= 0 ? '+ ' + C.toFixed(2) : '- ' + Math.abs(C).toFixed(2);
+
+          canvasEquationPill.textContent = `y = ${a.toFixed(2)}(x - ${h.toFixed(1)})² + ${k.toFixed(1)}`;
+          telemetryLeft.textContent = `Standard: y = ${A.toFixed(2)}x² ${signB}x ${signC}`;
+          telemetryRight.textContent = `Target: (${prob.targetX}, ${prob.targetY}) • Δ = ${disc.toFixed(1)}`;
+        } else if (topic === 'trig') {
+          const deg = parseFloat(sliderTrigAngle.value);
+          state.trig.angle = deg;
+          valTrigAngle.textContent = (deg > 0 ? '+' : '') + deg + '°';
+
+          const rad = (deg * Math.PI) / 180;
+          const s = Math.sin(rad);
+          const c = Math.cos(rad);
+          const t = Math.tan(rad);
+
+          readoutSin.textContent = s.toFixed(3);
+          readoutCos.textContent = c.toFixed(3);
+          readoutTan.textContent = t.toFixed(3);
+
+          const beamYAtTarget = prob.towerH + prob.distD * t;
+          canvasEquationPill.textContent = `θ = ${deg > 0 ? '+' : ''}${deg}° • tan(θ) = ${t.toFixed(3)}`;
+          telemetryLeft.textContent = `Tower H = ${prob.towerH}m • Distance D = ${prob.distD}m`;
+          telemetryRight.textContent = `Beam Y at D: ${beamYAtTarget.toFixed(1)}m (Target: ${prob.targetH}m)`;
+        } else {
+          const a = parseFloat(matA.value) || 0;
+          const b = parseFloat(matB.value) || 0;
+          const c = parseFloat(matC.value) || 0;
+          const d = parseFloat(matD.value) || 0;
+          state.matrix.a = a;
+          state.matrix.b = b;
+          state.matrix.c = c;
+          state.matrix.d = d;
+
+          const det = a * d - b * c;
+          readoutDet.textContent = `det(M) = ad - bc = ${det.toFixed(2)}`;
+          readoutAreaScale.textContent = `Area Scale = ${Math.abs(det).toFixed(2)}×`;
+
+          canvasEquationPill.textContent = `M = [[${a}, ${b}], [${c}, ${d}]] • det(M) = ${det.toFixed(2)}`;
+          telemetryLeft.textContent = `Basis i' = (${a}, ${c}) • Basis j' = (${b}, ${d})`;
+          telemetryRight.textContent = `Target Matrix: [[${prob.targetM[0]}, ${prob.targetM[1]}], [${prob.targetM[2]}, ${prob.targetM[3]}]]`;
+        }
+      }
+
+      // --- VERIFY SOLUTION & TRIGGER VISUAL ANIMATION ---
+      function triggerFireAndVerify(isQuickCard) {
+        if (state.animating) return;
+
+        // Auto-start 30s challenge on first shot if timer hasn't started yet
+        if (!state.timerRunning && state.timeRemaining === 30.0) {
+          startTimer();
+        }
+
+        const topic = state.activeTopic;
+        const prob = state.currentProblem;
+        let isHit = false;
+        let summaryDetail = '';
+
+        if (topic === 'quad') {
+          const { a, h, k } = state.quad;
+          const yAtTarget = a * Math.pow(prob.targetX - h, 2) + k;
+          const vertexMatch = Math.abs(h - prob.h) < 0.25 && Math.abs(k - prob.k) < 0.25;
+          const targetMatch = Math.abs(yAtTarget - prob.targetY) < 0.35;
+          isHit = vertexMatch && targetMatch;
+          summaryDetail = `Quadratic y=${a.toFixed(2)}(x-${h})²+${k} → y(${prob.targetX})=${yAtTarget.toFixed(1)}`;
+        } else if (topic === 'trig') {
+          const deg = state.trig.angle;
+          isHit = Math.abs(deg - prob.answerAngle) <= 1.5;
+          summaryDetail = `Trig Laser θ=${deg}° (Target θ=${prob.answerAngle}°)`;
+        } else {
+          const { a, b, c, d } = state.matrix;
+          const tm = prob.targetM;
+          isHit =
+            Math.abs(a - tm[0]) < 0.1 &&
+            Math.abs(b - tm[1]) < 0.1 &&
+            Math.abs(c - tm[2]) < 0.1 &&
+            Math.abs(d - tm[3]) < 0.1;
+          summaryDetail = `Matrix [[${a},${b}],[${c},${d}]] (det=${(a * d - b * c).toFixed(1)})`;
+        }
+
+        state.attemptCount += 1;
+        state.animating = true;
+        state.animStartTime = performance.now();
+        state.animDuration = 520;
+        state.animResult = { isHit, isQuickCard, summaryDetail };
+
+        if (isHit) {
+          playSound('hit');
+          state.streak += 1;
+          if (state.streak > state.peakStreak) state.peakStreak = state.streak;
+          state.solvedCount += 1;
+
+          const basePts = 200;
+          const speedBonus = isQuickCard ? 150 : 50;
+          const streakBonus = state.streak * 40;
+          const gained = basePts + speedBonus + streakBonus;
+          state.score += gained;
+
+          if (state.score > state.bestScore) {
+            state.bestScore = state.score;
+            bestScoreDisplay.textContent = String(state.bestScore);
+            try {
+              localStorage.setItem('mathblitz_best_30s', String(state.bestScore));
+            } catch (e) {}
+          }
+
+          setFeedbackPill(`🎯 DIRECT HIT! +${gained} pts (Streak ×${state.streak})`, 'success');
+          addLog(`HIT (+${gained} pts): ${summaryDetail}`, true);
+          state.roundHistory.push(`✓ ${summaryDetail} (+${gained})`);
+          spawnCelebrationParticles();
+        } else {
+          playSound('miss');
+          state.streak = 0;
+          setFeedbackPill('✗ Missed target! Check the formula hint & adjust.', 'error');
+          addLog(`Missed: ${summaryDetail}. Try again!`, false);
+        }
+
+        updateScoreHUD();
+      }
+
+      function updateScoreHUD() {
+        scoreDisplay.textContent = String(state.score);
+        streakDisplay.textContent = `${state.streak} 🔥`;
+        solvedCountBadge.textContent = `Solved: ${state.solvedCount}`;
+        const acc = state.attemptCount > 0 ? Math.round((state.solvedCount / state.attemptCount) * 100) : 100;
+        accuracyBadge.textContent = `Accuracy: ${acc}%`;
+      }
+
+      function spawnCelebrationParticles() {
+        state.particles = [];
+        for (let i = 0; i < 28; i++) {
+          const angle = (Math.PI * 2 * i) / 28;
+          const speed = 1.5 + Math.random() * 3.5;
+          state.particles.push({
+            x: 0.72 * canvas.width,
+            y: 0.45 * canvas.height,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: ['#1D4ED8', '#059669', '#D97706', '#6D28D9'][i % 4]
+          });
+        }
+      }
+
+      // --- 30-SECOND CHALLENGE TIMER ENGINE ---
+      function startTimer() {
+        if (state.timerRunning) return;
+        if (state.timeRemaining <= 0) {
+          resetChallengeStats();
+        }
+        state.timerRunning = true;
+        state.lastFrameTime = performance.now();
+        state.lastTickSecond = Math.ceil(state.timeRemaining);
+        btnStartIcon.textContent = '⏸';
+        btnStartText.textContent = 'Pause';
+        timerStateLabel.textContent = 'LIVE 30s BLITZ';
+        setFeedbackPill('⏱ 30-Second Challenge Active! Solve fast!', 'neutral');
+      }
+
+      function pauseTimer() {
+        state.timerRunning = false;
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Resume';
+        timerStateLabel.textContent = 'PAUSED';
+      }
+
+      function resetChallengeStats() {
+        state.timerRunning = false;
+        state.timeRemaining = 30.0;
+        state.score = 0;
+        state.streak = 0;
+        state.peakStreak = 0;
+        state.solvedCount = 0;
+        state.attemptCount = 0;
+        state.roundHistory = [];
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Start 30s';
+        timerStateLabel.textContent = '30s Challenge';
+        timerDisplay.textContent = '30.0s';
+        timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-blue-700';
+        timerBar.style.width = '100%';
+        timerBar.className = 'h-full bg-blue-600 transition-all duration-100';
+        updateScoreHUD();
+        setFeedbackPill('Timer reset to 30.0s. Press Start 30s or tap a solution card!', 'neutral');
+      }
+
+      function finishChallenge() {
+        state.timerRunning = false;
+        state.timeRemaining = 0;
+        timerDisplay.textContent = '0.0s';
+        timerBar.style.width = '0%';
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'New 30s';
+        playSound('finish');
+
+        // Populate Modal
+        modalFinalScore.textContent = String(state.score);
+        modalSolvedCount.textContent = String(state.solvedCount);
+        modalPeakStreak.textContent = `${state.peakStreak} 🔥`;
+
+        let stars = '⭐';
+        let headline = 'Good Effort! Keep Practicing!';
+        if (state.solvedCount >= 5 || state.score >= 1800) {
+          stars = '⭐⭐⭐';
+          headline = 'Grandmaster of Class 10 & 11 Maths!';
+        } else if (state.solvedCount >= 3 || state.score >= 900) {
+          stars = '⭐⭐';
+          headline = 'Sharp Mathematical Precision!';
+        }
+        modalStars.textContent = stars;
+        modalHeadline.textContent = headline;
+
+        modalSummaryNote.innerHTML = '';
+        if (state.roundHistory.length === 0) {
+          const line = document.createElement('div');
+          line.textContent = 'No problems completed in this 30s window. Use the Instant Math Solve cards for rapid scoring!';
+          modalSummaryNote.appendChild(line);
+        } else {
+          state.roundHistory.forEach((item) => {
+            const line = document.createElement('div');
+            line.textContent = item;
+            modalSummaryNote.appendChild(line);
+          });
+        }
+
+        resultModal.classList.remove('hidden');
+      }
+
+      // --- HIGH-DPI CANVAS RESIZING ---
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(260, Math.floor(rect.height * dpr));
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // --- MAIN RENDER LOOP (PURE WHITE #FFFFFF STUDIO GRAPHICS) ---
+      function renderLoop(now) {
+        // Update 30-second countdown timer
+        if (state.timerRunning) {
+          const dt = (now - state.lastFrameTime) / 1000;
+          state.lastFrameTime = now;
+          state.timeRemaining = Math.max(0, state.timeRemaining - dt);
+
+          timerDisplay.textContent = state.timeRemaining.toFixed(1) + 's';
+          const pct = (state.timeRemaining / 30.0) * 100;
+          timerBar.style.width = `${pct}%`;
+
+          if (state.timeRemaining <= 5.0) {
+            timerBar.className = 'h-full bg-red-600';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-red-600 timer-urgent';
+            const ceilSec = Math.ceil(state.timeRemaining);
+            if (ceilSec < state.lastTickSecond && ceilSec > 0) {
+              state.lastTickSecond = ceilSec;
+              playSound('tick');
+            }
+          } else if (state.timeRemaining <= 12.0) {
+            timerBar.className = 'h-full bg-amber-500';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-amber-600';
+          }
+
+          if (state.timeRemaining <= 0) {
+            finishChallenge();
+          }
+        } else {
+          state.lastFrameTime = now;
+        }
+
+        // Advance shot animation
+        let animProgress = 1;
+        if (state.animating) {
+          animProgress = Math.min(1, (now - state.animStartTime) / state.animDuration);
+          if (animProgress >= 1) {
+            state.animating = false;
+            const wasHit = state.animResult && state.animResult.isHit;
+            state.animResult = null;
+            if (wasHit) {
+              // Automatically advance to next challenge!
+              if (state.navMode === 'blitz') {
+                const order = ['quad', 'trig', 'matrix'];
+                const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+                loadProblem(nextTopic, true);
+              } else {
+                loadProblem(state.activeTopic, true);
+              }
+            }
+          }
+        }
+
+        // Clear canvas with Pure White Studio background (#FFFFFF)
+        const W = canvas.width;
+        const H = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+
+        if (state.activeTopic === 'quad') {
+          drawQuadraticScene(W, H, dpr, animProgress);
+        } else if (state.activeTopic === 'trig') {
+          drawTrigScene(W, H, dpr, animProgress);
+        } else {
+          drawMatrixScene(W, H, dpr, animProgress);
+        }
+
+        // Render celebration particles
+        if (state.particles.length > 0) {
+          state.particles.forEach((p) => {
+            p.x += p.vx * dpr;
+            p.y += p.vy * dpr;
+            p.alpha -= 0.024;
+            if (p.alpha > 0) {
+              ctx.save();
+              ctx.globalAlpha = Math.max(0, p.alpha);
+              ctx.fillStyle = p.color;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 4.5 * dpr, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }
+          });
+          state.particles = state.particles.filter((p) => p.alpha > 0);
+        }
+
+        requestAnimationFrame(renderLoop);
+      }
+
+      // --- HELPER: DRAW SLEEK SPACE ROCKET ALONG TANGENT ANGLE ---
+      function drawSpaceRocket(ctx, x, y, angleRad, scaleFactor, isFiring, dpr) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angleRad);
+        const s = scaleFactor * dpr;
+
+        // Animated thruster flame when firing or idling on pad
+        const flameLen = isFiring ? (22 + Math.sin(performance.now() * 0.04) * 7) * s : 10 * s;
+        const gradFlame = ctx.createLinearGradient(-16 * s, 0, -16 * s - flameLen, 0);
+        gradFlame.addColorStop(0, '#FFFBEB');
+        gradFlame.addColorStop(0.35, '#F59E0B');
+        gradFlame.addColorStop(0.75, '#EF4444');
+        gradFlame.addColorStop(1, 'rgba(239, 68, 68, 0)');
+        ctx.fillStyle = gradFlame;
+        ctx.beginPath();
+        ctx.moveTo(-14 * s, -5.5 * s);
+        ctx.quadraticCurveTo(-16 * s - flameLen * 0.6, 0, -16 * s - flameLen, 0);
+        ctx.quadraticCurveTo(-16 * s - flameLen * 0.6, 0, -14 * s, 5.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Exhaust nozzle
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(-15 * s, -4.5 * s);
+        ctx.lineTo(-11 * s, -3.5 * s);
+        ctx.lineTo(-11 * s, 3.5 * s);
+        ctx.lineTo(-15 * s, 4.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top & Bottom Delta Fins (Crimson Red)
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.moveTo(-12 * s, -5 * s);
+        ctx.lineTo(-18 * s, -13 * s);
+        ctx.lineTo(-4 * s, -6 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-12 * s, 5 * s);
+        ctx.lineTo(-18 * s, 13 * s);
+        ctx.lineTo(-4 * s, 6 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Main Rocket Fuselage (Metallic White / Silver with Cobalt Stripe)
+        ctx.fillStyle = '#F8FAFC';
+        ctx.strokeStyle = '#0F172A';
+        ctx.lineWidth = 1.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(-12 * s, -6 * s);
+        ctx.lineTo(8 * s, -6 * s);
+        ctx.quadraticCurveTo(19 * s, -5.5 * s, 24 * s, 0);
+        ctx.quadraticCurveTo(19 * s, 5.5 * s, 8 * s, 6 * s);
+        ctx.lineTo(-12 * s, 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Nose Cone (Crimson Red)
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.moveTo(11 * s, -5.5 * s);
+        ctx.quadraticCurveTo(19 * s, -5 * s, 24 * s, 0);
+        ctx.quadraticCurveTo(19 * s, 5 * s, 11 * s, 5.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cobalt Blue Mission Stripe
+        ctx.fillStyle = '#1D4ED8';
+        ctx.fillRect(-6 * s, -5.8 * s, 4.5 * s, 11.6 * s);
+
+        // Cockpit Porthole Window
+        ctx.fillStyle = '#38BDF8';
+        ctx.strokeStyle = '#0F172A';
+        ctx.lineWidth = 1.3 * s;
+        ctx.beginPath();
+        ctx.arc(4 * s, 0, 3.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // --- HELPER: DRAW ORBITAL SATELLITE / ALIEN COMMAND TARGET ---
+      function drawOrbitalTarget(ctx, tx, ty, dpr, prob) {
+        const pulse = 1 + 0.08 * Math.sin(performance.now() * 0.006);
+        ctx.save();
+        ctx.translate(tx, ty);
+
+        // Outer rotating energy shield ring
+        ctx.save();
+        ctx.rotate(performance.now() * 0.0015);
+        ctx.setLineDash([7 * dpr, 5 * dpr]);
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26 * dpr * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Solar Wing Panels (Left & Right)
+        ctx.fillStyle = '#1E3A8A';
+        ctx.strokeStyle = '#0F172A';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.fillRect(-30 * dpr, -6 * dpr, 13 * dpr, 12 * dpr);
+        ctx.strokeRect(-30 * dpr, -6 * dpr, 13 * dpr, 12 * dpr);
+        ctx.fillRect(17 * dpr, -6 * dpr, 13 * dpr, 12 * dpr);
+        ctx.strokeRect(17 * dpr, -6 * dpr, 13 * dpr, 12 * dpr);
+
+        // Solar grid lines
+        ctx.strokeStyle = '#60A5FA';
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(-23.5 * dpr, -6 * dpr);
+        ctx.lineTo(-23.5 * dpr, 6 * dpr);
+        ctx.moveTo(23.5 * dpr, -6 * dpr);
+        ctx.lineTo(23.5 * dpr, 6 * dpr);
+        ctx.stroke();
+
+        // Central Command Core Bullseye
+        const radii = [16, 10.5, 5];
+        const colors = ['#DC2626', '#FEF2F2', '#F59E0B'];
+        radii.forEach((r, idx) => {
+          ctx.fillStyle = colors[idx];
+          ctx.beginPath();
+          ctx.arc(0, 0, r * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#991B1B';
+          ctx.lineWidth = 1.4 * dpr;
+          ctx.stroke();
+        });
+
+        ctx.restore();
+
+        ctx.fillStyle = '#B91C1C';
+        ctx.font = `800 ${11 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`🎯 TARGET STATION (${prob.targetX}, ${prob.targetY})`, tx, ty + 38 * dpr);
+      }
+
+      // --- SCENE 1: CLASS 10 QUADRATIC TRAJECTORY RENDERER (SPACE ROCKET MISSION) ---
+      function drawQuadraticScene(W, H, dpr, animT) {
+        const padL = 52 * dpr;
+        const padR = 36 * dpr;
+        const padT = 58 * dpr;
+        const padB = 44 * dpr;
+
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+
+        const xMax = 10;
+        const yMax = 10;
+
+        const toX = (x) => padL + (x / xMax) * plotW;
+        const toY = (y) => padT + plotH - (y / yMax) * plotH;
+
+        // Draw crisp studio grid
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1 * dpr;
+        for (let i = 0; i <= 10; i++) {
+          const gx = toX(i);
+          const gy = toY(i);
+          ctx.beginPath();
+          ctx.moveTo(gx, padT);
+          ctx.lineTo(gx, padT + plotH);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(padL, gy);
+          ctx.lineTo(padL + plotW, gy);
+          ctx.stroke();
+        }
+
+        // Draw X and Y axes
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(padL, toY(0));
+        ctx.lineTo(padL + plotW, toY(0));
+        ctx.moveTo(toX(0), padT);
+        ctx.lineTo(toX(0), padT + plotH);
+        ctx.stroke();
+
+        // Axis numbers
+        ctx.fillStyle = '#475569';
+        ctx.font = `600 ${11 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        for (let i = 0; i <= 10; i += 2) {
+          ctx.fillText(String(i), toX(i), toY(0) + 18 * dpr);
+          if (i > 0) {
+            ctx.textAlign = 'right';
+            ctx.fillText(String(i), padL - 8 * dpr, toY(i) + 4 * dpr);
+            ctx.textAlign = 'center';
+          }
+        }
+
+        const prob = state.currentProblem;
+        const { a, h, k } = state.quad;
+
+        // Draw Glowing Orbital Apex Booster Ring at required vertex (prob.h, prob.k)
+        const reqVx = toX(prob.h);
+        const reqVy = toY(prob.k);
+        const vertexAligned = Math.abs(h - prob.h) < 0.25 && Math.abs(k - prob.k) < 0.25;
+        ctx.save();
+        ctx.strokeStyle = vertexAligned ? '#059669' : '#7C3AED';
+        ctx.fillStyle = vertexAligned ? 'rgba(5, 150, 105, 0.12)' : 'rgba(124, 58, 237, 0.10)';
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        ctx.ellipse(reqVx, reqVy, 11 * dpr, 22 * dpr, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.setLineDash([3 * dpr, 3 * dpr]);
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.ellipse(reqVx, reqVy, 15 * dpr, 26 * dpr, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle = vertexAligned ? '#047857' : '#6D28D9';
+        ctx.font = `800 ${11 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`⚡ APEX BOOSTER RING (${prob.h}, ${prob.k})`, reqVx, reqVy - 31 * dpr);
+
+        // Draw Orbital Target Station at (targetX, targetY)
+        const tx = toX(prob.targetX);
+        const ty = toY(prob.targetY);
+        drawOrbitalTarget(ctx, tx, ty, dpr, prob);
+
+        // Draw Student's Live Parabolic Flight Path y = a(x - h)^2 + k
+        ctx.save();
+        ctx.setLineDash([7 * dpr, 5 * dpr]);
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.beginPath();
+        let started = false;
+        for (let x = 0; x <= 10; x += 0.08) {
+          const y = a * Math.pow(x - h, 2) + k;
+          if (y >= -1 && y <= 10.5) {
+            const px = toX(x);
+            const py = toY(y);
+            if (!started) {
+              ctx.moveTo(px, py);
+              started = true;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw Rocket Launchpad & Gantry at x = 0, y = a(0 - h)^2 + k
+        const startX = 0;
+        const startY = Math.max(0, Math.min(9.5, a * Math.pow(startX - h, 2) + k));
+        const padScreenX = toX(startX);
+        const padScreenY = toY(startY);
+        const groundScreenY = toY(0);
+
+        // Launch Gantry Tower
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(padScreenX - 16 * dpr, padScreenY, 8 * dpr, Math.max(6 * dpr, groundScreenY - padScreenY));
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(padScreenX - 18 * dpr, padScreenY - 3 * dpr, 28 * dpr, 6 * dpr);
+
+        // Draw Student's Current Vertex Marker V(h, k)
+        const curVx = toX(h);
+        const curVy = toY(k);
+        ctx.fillStyle = '#059669';
+        ctx.beginPath();
+        ctx.arc(curVx, curVy, 5.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#065F46';
+        ctx.font = `700 ${10.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.fillText(`Vertex(${h.toFixed(1)}, ${k.toFixed(1)})`, curVx, curVy + 24 * dpr);
+
+        // Helper to compute screen-space tangent angle of parabola at math coordinate x
+        const getRocketScreenAngle = (xVal) => {
+          const dx = 0.05;
+          const y1 = a * Math.pow(xVal - h, 2) + k;
+          const y2 = a * Math.pow(xVal + dx - h, 2) + k;
+          return Math.atan2(toY(y2) - toY(y1), toX(xVal + dx) - toX(xVal));
+        };
+
+        // Draw Rocket: either animating along the trajectory with smoke trail or poised on the launchpad
+        if (state.animating) {
+          const projX = animT * prob.targetX;
+          const projY = a * Math.pow(projX - h, 2) + k;
+          const pScreenX = toX(projX);
+          const pScreenY = toY(projY);
+
+          // Glowing exhaust smoke puffs along traveled parabolic arc
+          for (let sIdx = 0; sIdx < 14; sIdx++) {
+            const trailFrac = Math.max(0, animT - sIdx * 0.045);
+            const trailX = trailFrac * prob.targetX;
+            const trailY = a * Math.pow(trailX - h, 2) + k;
+            const alpha = Math.max(0, 0.55 - sIdx * 0.038);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = sIdx < 4 ? '#F59E0B' : '#94A3B8';
+            ctx.beginPath();
+            ctx.arc(toX(trailX), toY(trailY), (7.5 - sIdx * 0.35) * dpr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          const rocketAngle = getRocketScreenAngle(projX);
+          drawSpaceRocket(ctx, pScreenX, pScreenY, rocketAngle, 1.15, true, dpr);
+        } else {
+          // Draw Rocket poised on launchpad tilted along initial trajectory slope
+          const initAngle = getRocketScreenAngle(0);
+          drawSpaceRocket(ctx, padScreenX, padScreenY, initAngle, 1.0, false, dpr);
+        }
+      }
+
+      // --- SCENE 2: CLASS 10 TRIGONOMETRY (REAL OBSERVATION TOWER & DRONE/BUOY TARGET) ---
+      function drawTrigScene(W, H, dpr, animT) {
+        const padL = 78 * dpr;
+        const padR = 58 * dpr;
+        const padT = 55 * dpr;
+        const padB = 45 * dpr;
+
+        const plotW = W - padL - padR;
+        const plotH = H - padT - padB;
+
+        const prob = state.currentProblem;
+        const maxD = Math.max(75, prob.distD * 1.2);
+        const maxH = 75;
+
+        const toX = (x) => padL + (x / maxD) * plotW;
+        const toY = (y) => padT + plotH - (y / maxH) * plotH;
+
+        // Subtle engineering grid
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1 * dpr;
+        for (let x = 0; x <= maxD; x += 10) {
+          ctx.beginPath();
+          ctx.moveTo(toX(x), padT);
+          ctx.lineTo(toX(x), padT + plotH);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= maxH; y += 10) {
+          ctx.beginPath();
+          ctx.moveTo(padL, toY(y));
+          ctx.lineTo(padL + plotW, toY(y));
+          ctx.stroke();
+        }
+
+        // Ground / Sea Level Plane (y = 0)
+        const groundY = toY(0);
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(padL - 40 * dpr, groundY, plotW + 65 * dpr, H - groundY);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.5 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(padL - 35 * dpr, groundY);
+        ctx.lineTo(padL + plotW + 20 * dpr, groundY);
+        ctx.stroke();
+
+        // Draw Real Observation Tower Image from groundY up to towerTopY = toY(prob.towerH)
+        const towerTopX = toX(0);
+        const towerTopY = toY(prob.towerH);
+        const towerPixelH = Math.max(48 * dpr, groundY - towerTopY);
+        const towerPixelW = Math.max(36 * dpr, Math.min(76 * dpr, towerPixelH * 0.48));
+
+        if (towerImg.complete && towerImg.naturalWidth > 0) {
+          ctx.drawImage(
+            towerImg,
+            towerTopX - towerPixelW / 2,
+            towerTopY - 4 * dpr,
+            towerPixelW,
+            towerPixelH + 6 * dpr
+          );
+        } else {
+          ctx.fillStyle = '#B91C1C';
+          ctx.fillRect(towerTopX - 14 * dpr, towerTopY, 28 * dpr, towerPixelH);
+        }
+
+        // Glowing Laser Emitter Lens at top of Real Tower (0, towerH)
+        ctx.fillStyle = '#1D4ED8';
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.arc(towerTopX, towerTopY, 6.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Tower Height Callout Pill
+        ctx.fillStyle = '#0F172A';
+        ctx.font = `800 ${11 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`Tower H = ${prob.towerH}m`, towerTopX, towerTopY - 14 * dpr);
+
+        // Horizontal Line of Sight from (0, towerH) to (distD, towerH)
+        const targetScreenX = toX(prob.distD);
+        const targetScreenY = toY(prob.targetH);
+        const sightY = towerTopY;
+
+        ctx.save();
+        ctx.setLineDash([6 * dpr, 5 * dpr]);
+        ctx.strokeStyle = '#64748B';
+        ctx.lineWidth = 1.8 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(towerTopX, sightY);
+        ctx.lineTo(targetScreenX, sightY);
+        ctx.stroke();
+
+        // Vertical Opposite Side Δy
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(targetScreenX, sightY);
+        ctx.lineTo(targetScreenX, targetScreenY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Right-angle square marker at (distD, towerH)
+        const sq = 8 * dpr;
+        const dirY = targetScreenY < sightY ? -1 : 1;
+        if (Math.abs(targetScreenY - sightY) > 12 * dpr) {
+          ctx.strokeStyle = '#059669';
+          ctx.lineWidth = 1.5 * dpr;
+          ctx.strokeRect(targetScreenX - sq, dirY < 0 ? sightY - sq : sightY, sq, sq);
+        }
+
+        // Labels for Adjacent D and Opposite Δy
+        const deltaY = prob.targetH - prob.towerH;
+        ctx.fillStyle = '#334155';
+        ctx.font = `700 ${11 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`Adjacent D = ${prob.distD}m`, (towerTopX + targetScreenX) / 2, sightY - 9 * dpr);
+
+        ctx.fillStyle = '#059669';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Δy = ${deltaY > 0 ? '+' : ''}${deltaY.toFixed(1)}m`, targetScreenX + 12 * dpr, (sightY + targetScreenY) / 2);
+
+        // Draw Attractive Target Receiver Quad-Drone (if airborne) or Marine Laser Buoy (if on ground/sea)
+        ctx.save();
+        ctx.translate(targetScreenX, targetScreenY);
+        if (prob.targetH > 0) {
+          // Quad-Drone Body & Arms
+          ctx.strokeStyle = '#1E293B';
+          ctx.lineWidth = 3 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(-20 * dpr, -6 * dpr);
+          ctx.lineTo(20 * dpr, -6 * dpr);
+          ctx.stroke();
+
+          // Spinning Rotor Discs
+          const rotorW = (9 + 3 * Math.sin(performance.now() * 0.03)) * dpr;
+          ctx.strokeStyle = '#2563EB';
+          ctx.lineWidth = 2 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(-20 * dpr - rotorW, -11 * dpr);
+          ctx.lineTo(-20 * dpr + rotorW, -11 * dpr);
+          ctx.moveTo(20 * dpr - rotorW, -11 * dpr);
+          ctx.lineTo(20 * dpr + rotorW, -11 * dpr);
+          ctx.stroke();
+
+          // Drone Target Core
+          ctx.fillStyle = '#DC2626';
+          ctx.beginPath();
+          ctx.arc(0, 0, 12 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(0, 0, 5.5 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Ground / Sea Beacon Buoy
+          ctx.fillStyle = '#DC2626';
+          ctx.beginPath();
+          ctx.moveTo(-14 * dpr, 0);
+          ctx.lineTo(14 * dpr, 0);
+          ctx.lineTo(7 * dpr, -20 * dpr);
+          ctx.lineTo(-7 * dpr, -20 * dpr);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#F59E0B';
+          ctx.beginPath();
+          ctx.arc(0, -23 * dpr, 6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Draw Student's Laser Beam at angle state.trig.angle
+        const deg = state.trig.angle;
+        const rad = (deg * Math.PI) / 180;
+        const beamEndYVal = prob.towerH + prob.distD * Math.tan(rad);
+        const beamEndScreenX = targetScreenX;
+        const beamEndScreenY = toY(beamEndYVal);
+
+        // Angle arc
+        ctx.strokeStyle = '#D97706';
+        ctx.fillStyle = 'rgba(217, 119, 6, 0.14)';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.beginPath();
+        const arcRadius = 42 * dpr;
+        const screenAngle = Math.atan2(beamEndScreenY - towerTopY, beamEndScreenX - towerTopX);
+        ctx.moveTo(towerTopX, towerTopY);
+        ctx.arc(towerTopX, towerTopY, arcRadius, Math.min(0, screenAngle), Math.max(0, screenAngle));
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#B45309';
+        ctx.font = `800 ${11.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`θ = ${deg}°`, towerTopX + 46 * dpr, towerTopY + (deg >= 0 ? -10 * dpr : 20 * dpr));
+
+        // High-Energy Laser Beam Line
+        const curX = towerTopX + (beamEndScreenX - towerTopX) * (state.animating ? animT : 1);
+        const curY = towerTopY + (beamEndScreenY - towerTopY) * (state.animating ? animT : 1);
+
+        // Outer laser glow
+        ctx.save();
+        ctx.strokeStyle = state.animating ? 'rgba(16, 185, 129, 0.35)' : 'rgba(37, 99, 235, 0.28)';
+        ctx.lineWidth = (state.animating ? 10 : 7) * dpr;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(towerTopX, towerTopY);
+        ctx.lineTo(curX, curY);
+        ctx.stroke();
+
+        // Inner laser core
+        ctx.strokeStyle = state.animating ? '#059669' : '#1D4ED8';
+        ctx.lineWidth = (state.animating ? 4 : 2.8) * dpr;
+        ctx.beginPath();
+        ctx.moveTo(towerTopX, towerTopY);
+        ctx.lineTo(curX, curY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Laser impact reticle at x = D
+        ctx.fillStyle = state.animating ? '#10B981' : '#1D4ED8';
+        ctx.beginPath();
+        ctx.arc(curX, curY, 6.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- HELPER: DRAW TRANSFORMED ANIMAL FACE + ASYMMETRIC ORIENTATION BADGES ---
+      function drawTransformedAnimalFace(ctx, img, m0, m1, m2, m3, cx, cy, scale, dpr, isTargetGhost) {
+        const radiusUnits = 1.65; // Animal face spans [-1.65, 1.65] x [-1.65, 1.65] in Cartesian units
+        const pixelSize = radiusUnits * 2 * scale;
+
+        ctx.save();
+        // Map local image coordinates (u right, v down) to Cartesian (x = u, y = -v) transformed by [[m0, m1], [m2, m3]]:
+        // X_screen = cx + m0 * u - m1 * v
+        // Y_screen = cy - m2 * u + m3 * v
+        ctx.transform(m0, -m2, -m1, m3, cx, cy);
+
+        // Draw transformed coordinate frame border around the animal face
+        ctx.strokeStyle = isTargetGhost ? '#D97706' : '#1D4ED8';
+        ctx.lineWidth = (isTargetGhost ? 2.2 : 2.6) * dpr;
+        if (isTargetGhost) {
+          ctx.setLineDash([6 * dpr, 4 * dpr]);
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+        } else {
+          ctx.fillStyle = 'rgba(37, 99, 235, 0.06)';
+        }
+        const half = pixelSize / 2;
+        ctx.fillRect(-half, -half, pixelSize, pixelSize);
+        ctx.strokeRect(-half, -half, pixelSize, pixelSize);
+        ctx.setLineDash([]);
+
+        // Draw the Animal Face image inside [-half, half]
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, -half * 0.92, -half * 0.92, pixelSize * 0.92, pixelSize * 0.92);
+        } else {
+          // Fallback geometric fox face if image still decoding
+          ctx.fillStyle = isTargetGhost ? 'rgba(217, 119, 6, 0.35)' : '#EA580C';
+          ctx.beginPath();
+          ctx.moveTo(0, half * 0.75);
+          ctx.lineTo(-half * 0.75, -half * 0.2);
+          ctx.lineTo(-half * 0.55, -half * 0.8);
+          ctx.lineTo(-half * 0.15, -half * 0.45);
+          ctx.lineTo(half * 0.15, -half * 0.45);
+          ctx.lineTo(half * 0.55, -half * 0.8);
+          ctx.lineTo(half * 0.75, -half * 0.2);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Asymmetric Star Badge on the (+X, +Y) ear corner (local top-right: u = +0.62*half, v = -0.62*half)
+        // Makes Y-axis reflection (x -> -x) and y=x reflection 100% visually unmistakable!
+        const badgeX = half * 0.68;
+        const badgeY = -half * 0.68;
+        ctx.fillStyle = isTargetGhost ? '#D97706' : '#1D4ED8';
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.8 * dpr;
+        ctx.beginPath();
+        ctx.arc(badgeX, badgeY, 10 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw a 5-point star inside the ear badge
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const outerA = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+          const innerA = outerA + Math.PI / 5;
+          const ox = badgeX + Math.cos(outerA) * 5.5 * dpr;
+          const oy = badgeY + Math.sin(outerA) * 5.5 * dpr;
+          const ix = badgeX + Math.cos(innerA) * 2.4 * dpr;
+          const iy = badgeY + Math.sin(innerA) * 2.4 * dpr;
+          if (i === 0) ctx.moveTo(ox, oy);
+          else ctx.lineTo(ox, oy);
+          ctx.lineTo(ix, iy);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      // --- SCENE 3: CLASS 11 2x2 MATRIX TRANSFORMATION RENDERER (ANIMAL FACE MORPH) ---
+      function drawMatrixScene(W, H, dpr, animT) {
+        const cx = W / 2;
+        const cy = H / 2 + 12 * dpr;
+        const scale = Math.min(W, H) / 8.6;
+
+        const toScreen = (x, y) => [cx + x * scale, cy - y * scale];
+
+        // Background Cartesian Grid
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1 * dpr;
+        for (let i = -4; i <= 4; i++) {
+          const [x1, y1] = toScreen(i, -4);
+          const [x2, y2] = toScreen(i, 4);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+
+          const [hx1, hy1] = toScreen(-4, i);
+          const [hx2, hy2] = toScreen(4, i);
+          ctx.beginPath();
+          ctx.moveTo(hx1, hy1);
+          ctx.lineTo(hx2, hy2);
+          ctx.stroke();
+        }
+
+        // Main X & Y Axes
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4.2 * scale, cy);
+        ctx.lineTo(cx + 4.2 * scale, cy);
+        ctx.moveTo(cx, cy - 3.8 * scale);
+        ctx.lineTo(cx, cy + 3.8 * scale);
+        ctx.stroke();
+
+        const prob = state.currentProblem;
+        const tm = prob.targetM;
+
+        // 1. Draw TARGET Golden Transformed Animal Face (using prob.targetM)
+        drawTransformedAnimalFace(
+          ctx,
+          animalTargetImg,
+          tm[0], tm[1], tm[2], tm[3],
+          cx, cy, scale, dpr,
+          true
+        );
+
+        // Label target pose ear corner (+1.65, +1.65)
+        const [tLabelX, tLabelY] = toScreen(
+          tm[0] * 1.15 + tm[1] * 1.15,
+          tm[2] * 1.15 + tm[3] * 1.15
+        );
+        ctx.fillStyle = '#B45309';
+        ctx.font = `800 ${11 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('★ TARGET POSE', tLabelX, tLabelY - 14 * dpr);
+
+        // 2. Draw Student's Transformed Animal Face (smoothly interpolated from Identity if animating)
+        const t = state.animating ? animT : 1;
+        const a = (1 - t) * 1 + t * state.matrix.a;
+        const b = (1 - t) * 0 + t * state.matrix.b;
+        const c = (1 - t) * 0 + t * state.matrix.c;
+        const d = (1 - t) * 1 + t * state.matrix.d;
+
+        drawTransformedAnimalFace(
+          ctx,
+          animalImg,
+          a, b, c, d,
+          cx, cy, scale, dpr,
+          false
+        );
+
+        // Draw Transformed Basis Vectors i' = (a, c) in Blue and j' = (b, d) in Emerald
+        const [ox, oy] = toScreen(0, 0);
+        const [ix, iy] = toScreen(a, c);
+        const [jx, jy] = toScreen(b, d);
+
+        // Basis i'
+        ctx.strokeStyle = '#1D4ED8';
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(ix, iy);
+        ctx.stroke();
+        ctx.fillStyle = '#1D4ED8';
+        ctx.beginPath();
+        ctx.arc(ix, iy, 5.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = `700 ${11 * dpr}px "JetBrains Mono", monospace`;
+        ctx.fillText(`î'(${a.toFixed(1)},${c.toFixed(1)})`, ix + 8 * dpr, iy - 6 * dpr);
+
+        // Basis j'
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 3 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(jx, jy);
+        ctx.stroke();
+        ctx.fillStyle = '#059669';
+        ctx.beginPath();
+        ctx.arc(jx, jy, 5.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(`ĵ'(${b.toFixed(1)},${d.toFixed(1)})`, jx + 8 * dpr, jy + 14 * dpr);
+      }
+
+      // --- EVENT LISTENERS ---
+      // Mode switching tabs
+      document.querySelectorAll('.mode-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-mode');
+          state.navMode = mode;
+
+          document.querySelectorAll('.mode-tab').forEach((b) => {
+            const isSelected = b.getAttribute('data-mode') === mode;
+            if (isSelected) {
+              b.className = 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm';
+            } else {
+              b.className = 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+            }
+          });
+
+          const targetTopic = mode === 'blitz' ? 'quad' : mode;
+          loadProblem(targetTopic, false);
+          setFeedbackPill(
+            mode === 'blitz'
+              ? '⚡ All-Topic 30s Blitz active! Cycles Class 10 & 11 problems.'
+              : `Switched to ${btn.textContent.trim()}`,
+            'neutral'
+          );
+        });
+      });
+
+      // Start / Pause 30s Timer
+      btnStartChallenge.addEventListener('click', () => {
+        if (state.timerRunning) {
+          pauseTimer();
+        } else {
+          startTimer();
+        }
+      });
+
+      btnResetChallenge.addEventListener('click', () => {
+        resetChallengeStats();
+      });
+
+      btnSkipProblem.addEventListener('click', () => {
+        if (state.navMode === 'blitz') {
+          const order = ['quad', 'trig', 'matrix'];
+          const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+          loadProblem(nextTopic, true);
+        } else {
+          loadProblem(state.activeTopic, true);
+        }
+      });
+
+      btnToggleHint.addEventListener('click', () => {
+        hintBanner.classList.toggle('hidden');
+      });
+
+      btnMute.addEventListener('click', () => {
+        isMuted = !isMuted;
+        btnMute.textContent = isMuted ? '🔇' : '🔊';
+      });
+
+      // Quadratic Sliders
+      [sliderQuadA, sliderQuadH, sliderQuadK].forEach((el) => {
+        el.addEventListener('input', updateReadouts);
+      });
+
+      // Trig Slider & Presets
+      sliderTrigAngle.addEventListener('input', updateReadouts);
+      document.querySelectorAll('.trig-preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sliderTrigAngle.value = btn.getAttribute('data-angle');
+          updateReadouts();
+        });
+      });
+
+      // Matrix Inputs & Stepper Buttons
+      [matA, matB, matC, matD].forEach((el) => {
+        el.addEventListener('input', updateReadouts);
+      });
+      document.querySelectorAll('.mat-step-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const cell = btn.getAttribute('data-mat');
+          const delta = parseFloat(btn.getAttribute('data-delta'));
+          const inputMap = { a: matA, b: matB, c: matC, d: matD };
+          const targetInput = inputMap[cell];
+          const cur = parseFloat(targetInput.value) || 0;
+          const next = Math.max(-2, Math.min(2, cur + delta));
+          targetInput.value = String(next);
+          updateReadouts();
+        });
+      });
+
+      // Primary Fire / Apply Button & Spacebar Shortcut
+      btnFireAction.addEventListener('click', () => {
+        triggerFireAndVerify(false);
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'BUTTON') {
+          e.preventDefault();
+          triggerFireAndVerify(false);
+        }
+      });
+
+      // Modal buttons
+      btnPlayAgainModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+        startTimer();
+      });
+
+      btnCloseModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+      });
+
+      // --- MOBILE TOUCH & POINTER INTERACTION DIRECTLY ON SIMULATION CANVAS ---
+      // Unlock Web Audio on first iOS/Android touch gesture anywhere on the page
+      ['touchstart', 'pointerdown'].forEach((evtName) => {
+        window.addEventListener(evtName, () => {
+          if (!isMuted && audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        }, { passive: true });
+      });
+
+      let isCanvasDragging = false;
+
+      function handleCanvasPointer(clientX, clientY) {
+        if (state.animating) return;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const px = (clientX - rect.left) * dpr;
+        const py = (clientY - rect.top) * dpr;
+        const W = canvas.width;
+        const H = canvas.height;
+
+        if (state.activeTopic === 'quad') {
+          const padL = 52 * dpr, padR = 36 * dpr, padT = 58 * dpr, padB = 44 * dpr;
+          const plotW = W - padL - padR;
+          const plotH = H - padT - padB;
+          const mathX = Math.max(1, Math.min(9, ((px - padL) / plotW) * 10));
+          const mathY = Math.max(1, Math.min(9, ((padT + plotH - py) / plotH) * 10));
+          const snappedH = Math.round(mathX * 2) / 2;
+          const snappedK = Math.round(mathY * 2) / 2;
+          sliderQuadH.value = String(snappedH);
+          sliderQuadK.value = String(snappedK);
+          updateReadouts();
+        } else if (state.activeTopic === 'trig') {
+          const padL = 78 * dpr, padR = 58 * dpr, padT = 55 * dpr, padB = 45 * dpr;
+          const plotW = W - padL - padR;
+          const plotH = H - padT - padB;
+          const prob = state.currentProblem;
+          const maxD = Math.max(75, prob.distD * 1.2);
+          const maxH = 75;
+          const mathX = Math.max(2, ((px - padL) / plotW) * maxD);
+          const mathY = ((padT + plotH - py) / plotH) * maxH;
+          const angleDeg = Math.round((Math.atan2(mathY - prob.towerH, mathX) * 180) / Math.PI);
+          const clampedDeg = Math.max(-60, Math.min(75, angleDeg));
+          sliderTrigAngle.value = String(clampedDeg);
+          updateReadouts();
+        } else if (state.activeTopic === 'matrix') {
+          const cx = W / 2;
+          const cy = H / 2 + 12 * dpr;
+          const scale = Math.min(W, H) / 8.6;
+          const mathX = (px - cx) / scale;
+          const mathY = (cy - py) / scale;
+          const snappedX = Math.max(-2, Math.min(2, Math.round(mathX * 2) / 2));
+          const snappedY = Math.max(-2, Math.min(2, Math.round(mathY * 2) / 2));
+          // Drag nearest basis vector endpoint i'=(a,c) or j'=(b,d)
+          const distI = Math.hypot(mathX - state.matrix.a, mathY - state.matrix.c);
+          const distJ = Math.hypot(mathX - state.matrix.b, mathY - state.matrix.d);
+          if (distI <= distJ) {
+            matA.value = String(snappedX);
+            matC.value = String(snappedY);
+          } else {
+            matB.value = String(snappedX);
+            matD.value = String(snappedY);
+          }
+          updateReadouts();
+        }
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        isCanvasDragging = true;
+        ensureAudio();
+        handleCanvasPointer(e.clientX, e.clientY);
+      });
+      canvas.addEventListener('pointermove', (e) => {
+        if (!isCanvasDragging) return;
+        handleCanvasPointer(e.clientX, e.clientY);
+      });
+      window.addEventListener('pointerup', () => {
+        isCanvasDragging = false;
+      });
+      window.addEventListener('pointercancel', () => {
+        isCanvasDragging = false;
+      });
+
+      // Keep quick choice cards compact & legible on 320px-414px Android/iPhone screens
+      const btnOpenQR = document.getElementById('btnOpenQR');
+      const qrModal = document.getElementById('qrModal');
+      const btnCloseQR = document.getElementById('btnCloseQR');
+      const btnDoneQR = document.getElementById('btnDoneQR');
+      const qrUrlInput = document.getElementById('qrUrlInput');
+      const btnCopyQRUrl = document.getElementById('btnCopyQRUrl');
+      const qrCanvasContainer = document.getElementById('qrCanvasContainer');
+      const qrStatusCaption = document.getElementById('qrStatusCaption');
+      const btnDownloadQR = document.getElementById('btnDownloadQR');
+
+      function getDeployUrl() {
+        const raw = (qrUrlInput.value || '').trim();
+        if (raw) return raw;
+        const loc = window.location.href;
+        if (loc && loc.startsWith('http')) return loc;
+        return 'https://www.futurelabgalaxy.com/mathblitz.html';
+      }
+
+      function renderQRCode() {
+        const targetUrl = getDeployUrl();
+        qrStatusCaption.textContent = targetUrl;
+        qrCanvasContainer.innerHTML = '';
+
+        const qrOutCanvas = document.createElement('canvas');
+        qrOutCanvas.id = 'generatedQrCanvas';
+        const size = 200;
+        qrOutCanvas.width = size;
+        qrOutCanvas.height = size;
+        const qctx = qrOutCanvas.getContext('2d');
+        qctx.fillStyle = '#FFFFFF';
+        qctx.fillRect(0, 0, size, size);
+
+        if (typeof window.qrcode === 'function') {
+          try {
+            const qr = window.qrcode(0, 'M');
+            qr.addData(targetUrl);
+            qr.make();
+            const count = qr.getModuleCount();
+            const margin = 12;
+            const cell = (size - margin * 2) / count;
+            qctx.fillStyle = '#0F172A';
+            for (let r = 0; r < count; r++) {
+              for (let c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) {
+                  qctx.fillRect(
+                    Math.floor(margin + c * cell),
+                    Math.floor(margin + r * cell),
+                    Math.ceil(cell),
+                    Math.ceil(cell)
+                  );
+                }
+              }
+            }
+          } catch (err) {
+            qctx.fillStyle = '#1D4ED8';
+            qctx.font = 'bold 12px Inter, sans-serif';
+            qctx.textAlign = 'center';
+            qctx.fillText('Enter valid URL for QR', size / 2, size / 2);
+          }
+        }
+        qrCanvasContainer.appendChild(qrOutCanvas);
+      }
+
+      btnOpenQR.addEventListener('click', () => {
+        if (!qrUrlInput.value) {
+          const loc = window.location.href;
+          qrUrlInput.value = (loc && loc.startsWith('http') && !loc.includes('about:srcdoc'))
+            ? loc
+            : 'https://www.futurelabgalaxy.com/mathblitz.html';
+        }
+        renderQRCode();
+        qrModal.classList.remove('hidden');
+      });
+
+      qrUrlInput.addEventListener('input', renderQRCode);
+
+      btnCopyQRUrl.addEventListener('click', () => {
+        const urlToCopy = getDeployUrl();
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(urlToCopy);
+          } else {
+            qrUrlInput.select();
+            document.execCommand('copy');
+          }
+          btnCopyQRUrl.textContent = 'Copied!';
+          setTimeout(() => { btnCopyQRUrl.textContent = 'Copy'; }, 1500);
+        } catch (e) {}
+      });
+
+      btnDownloadQR.addEventListener('click', () => {
+        const qrC = document.getElementById('generatedQrCanvas');
+        if (!qrC) return;
+        const link = document.createElement('a');
+        link.download = 'MathBlitz_30s_QR.png';
+        link.href = qrC.toDataURL('image/png');
+        link.click();
+      });
+
+      [btnCloseQR, btnDoneQR].forEach((b) => {
+        b.addEventListener('click', () => {
+          qrModal.classList.add('hidden');
+        });
+      });
+
+      // Initialize first problem and start render loop
+      loadProblem('quad', false);
+      requestAnimationFrame(renderLoop);
+    })();
+  </script>
+</body>
+</html>

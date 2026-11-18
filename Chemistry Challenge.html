@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>ChemBlitz 30s — Class 10 &amp; 11 Interactive Visual Chemistry Challenge</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-studio: #FFFFFF;
+      --cobalt: #1D4ED8;
+      --emerald: #059669;
+      --amber: #D97706;
+      --purple: #6D28D9;
+      --crimson: #DC2626;
+      --charcoal: #0F172A;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    input[type="text"], textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #FFFFFF;
+      color: #0F172A;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .font-mono-math {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @keyframes pulse-urgent {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .timer-urgent {
+      animation: pulse-urgent 0.6s infinite ease-in-out;
+    }
+    button, input, label, .mode-tab {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #simCanvas {
+      touch-action: none;
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      body {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-slate-900 min-h-screen flex flex-col">
+
+  <!-- TOP NAVIGATION & 30-SECOND HUD -->
+  <header class="border-b-2 border-slate-200 bg-white sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Curriculum Badge -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-700 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+          🧪
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">ChemBlitz 30s</h1>
+            <span class="text-xs font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Class 10 &amp; 11</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Interactive Visual Inorganic Chemistry &amp; Reaction Color Arena</p>
+        </div>
+      </div>
+
+      <!-- 30-Second Timer Core Widget -->
+      <div class="flex items-center gap-2 sm:gap-4 bg-slate-50 border-2 border-slate-200 rounded-2xl px-3 py-1.5">
+        <div class="flex flex-col min-w-[115px] sm:min-w-[140px]">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
+            <span id="timerStateLabel">30s Challenge</span>
+            <span id="timerDisplay" class="font-mono-math text-base sm:text-lg font-extrabold text-blue-700">30.0s</span>
+          </div>
+          <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mt-1">
+            <div id="timerBar" class="h-full bg-blue-600 transition-all duration-100" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <button id="btnStartChallenge" type="button" class="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+          <span id="btnStartIcon">▶</span>
+          <span id="btnStartText">Start 30s</span>
+        </button>
+
+        <button id="btnResetChallenge" type="button" title="Reset 30s Timer &amp; Score" class="p-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition">
+          ↺
+        </button>
+      </div>
+
+      <!-- Score, Streak, Best & Audio Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-white border-2 border-slate-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-slate-400">Score</div>
+          <div id="scoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-slate-900">0</div>
+        </div>
+        <div class="px-3 py-1.5 rounded-xl bg-amber-50 border-2 border-amber-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-amber-700">Streak</div>
+          <div id="streakDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-amber-700">0 🔥</div>
+        </div>
+        <div class="hidden md:block px-3 py-1.5 rounded-xl bg-emerald-50 border-2 border-emerald-200 text-center">
+          <div class="text-[10px] font-bold uppercase text-emerald-700">Best (30s)</div>
+          <div id="bestScoreDisplay" class="font-mono-math text-sm sm:text-base font-extrabold text-emerald-700">0</div>
+        </div>
+        <button id="btnMute" type="button" class="p-2.5 rounded-xl border-2 border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-sm transition" title="Toggle Sound Effects">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Topic Navigation Bar -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 bg-slate-50/70 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+        <button id="tab-precip" type="button" data-mode="precip" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm">
+          Class 10: Precipitation &amp; Displacement
+        </button>
+        <button id="tab-redox" type="button" data-mode="redox" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 11: Redox &amp; Transition Metals
+        </button>
+        <button id="tab-thermal" type="button" data-mode="thermal" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100">
+          Class 10 &amp; 11: Thermal Decomposition &amp; Gases
+        </button>
+        <button id="tab-blitz" type="button" data-mode="blitz" class="mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-purple-700 border border-purple-300 hover:bg-purple-50">
+          ⚡ All-Chemistry 30s Mix
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+        <span id="solvedCountBadge" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-mono-math">Solved: 0</span>
+        <button id="btnSkipProblem" type="button" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold transition">
+          Next Reaction →
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT WORKSPACE -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+    <!-- LEFT / CENTER: INTERACTIVE VISUAL REACTION APPARATUS CANVAS (7 COLS) -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- Active Challenge Prompt Banner -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span id="badgeClassLevel" class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">CLASS 10 • PRECIPITATION &amp; DISPLACEMENT</span>
+            <span id="badgeDifficulty" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">Reaction #1</span>
+          </div>
+          <h2 id="challengeTitle" class="text-sm sm:text-base font-extrabold text-slate-900">
+            Mix colorless Lead(II) Nitrate with colorless Potassium Iodide to form a dense canary-yellow precipitate (PbI₂↓) in colorless KNO₃!
+          </h2>
+        </div>
+
+        <button id="btnToggleHint" type="button" class="self-start sm:self-center shrink-0 px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition">
+          💡 Reaction Principle
+        </button>
+      </div>
+
+      <!-- Collapsible Formula Hint Box -->
+      <div id="hintBanner" class="hidden bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-3 text-xs sm:text-sm text-amber-950 font-medium">
+        <div class="font-bold text-amber-900 mb-0.5">Inorganic Chemistry Principle &amp; Balancing Guide:</div>
+        <div id="hintText" class="font-mono-math text-xs">Double displacement: Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s)↓ (canary-yellow ppt) + 2KNO₃(aq).</div>
+      </div>
+
+      <!-- Pure White Studio Reaction Visualization Canvas Container -->
+      <div class="relative bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+        <!-- Top Overlay Readout inside Canvas -->
+        <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none z-10">
+          <div id="canvasEquationPill" class="px-3 py-1.5 rounded-xl bg-white/95 border-2 border-slate-200 shadow-sm font-mono-math text-xs sm:text-sm font-bold text-slate-900">
+            Pb(NO₃)₂ + KI → ?
+          </div>
+          <div id="canvasFeedbackPill" class="px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm">
+            Enter balanced equation or tap an Instant Solve card!
+          </div>
+        </div>
+
+        <div class="w-full h-[275px] xs:h-[310px] sm:h-[430px] relative">
+          <canvas id="simCanvas" class="w-full h-full block bg-white"></canvas>
+        </div>
+
+        <!-- Bottom Live Color & Substance Telemetry Strip -->
+        <div class="bg-slate-50 border-t border-slate-200 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div id="telemetryLeft" class="font-mono-math font-semibold text-slate-700">
+            Your Output: Enter products to visualize exact colors
+          </div>
+          <div id="telemetryRight" class="font-mono-math font-bold text-blue-700">
+            Target Outcome: Canary-Yellow PbI₂↓ + Colorless KNO₃
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: EQUATION INPUT BUILDER & FAST-SOLVE CARDS (5 COLS) -->
+    <section class="lg:col-span-5 flex flex-col gap-3">
+
+      <!-- FAST-SOLVE EQUATION CARDS (Instant Lock & React for 30s Blitz!) -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-blue-700">⚡ Instant Equation Solve (+150 Speed Bonus)</h3>
+            <p class="text-xs text-slate-500">Identify the balanced equation &amp; exact product colors to trigger immediately:</p>
+          </div>
+        </div>
+        <div id="quickChoiceContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- LIVE CHEMICAL EQUATION INPUT & APPARATUS CONTROLS -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Balanced Reaction Equation Input</h3>
+            <p class="text-xs text-slate-500">Type ASCII (<span class="font-mono-math">PbI2</span>, <span class="font-mono-math">-&gt;</span>) or Unicode (<span class="font-mono-math">PbI₂</span>, <span class="font-mono-math">→</span>); colors update live</p>
+          </div>
+          <span id="liveColorMatchTag" class="text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700">Live Color Sim</span>
+        </div>
+
+        <!-- Primary Equation Input Field -->
+        <div class="space-y-2">
+          <div class="relative flex items-center">
+            <input
+              id="equationInput"
+              type="text"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="e.g., Pb(NO3)2 + 2KI -> PbI2 + 2KNO3"
+              class="w-full px-3.5 py-3 pr-10 rounded-xl border-2 border-slate-300 focus:border-blue-700 focus:outline-none font-mono-math text-xs sm:text-sm font-bold text-slate-900 bg-slate-50/50 focus:bg-white transition"
+            />
+            <button id="btnClearEquation" type="button" title="Clear Equation Input" class="absolute right-2.5 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 text-xs font-bold transition">
+              ✕
+            </button>
+          </div>
+
+          <!-- Quick Stoichiometry & Arrow Insert Bar -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 mr-0.5">Symbols:</span>
+            <button type="button" data-insert=" + " class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">+</button>
+            <button type="button" data-insert=" -> " class="sym-insert-btn px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 font-mono-math text-xs font-bold border border-blue-200 transition">→</button>
+            <button type="button" data-insert="2" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">2</button>
+            <button type="button" data-insert="3" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">3</button>
+            <button type="button" data-insert="4" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">4</button>
+            <button type="button" data-insert="5" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">5</button>
+            <button type="button" data-insert="8" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">8</button>
+            <button type="button" data-insert="10" class="sym-insert-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-800 font-mono-math text-xs font-bold border border-slate-200 transition">10</button>
+            <button type="button" data-insert="(aq)" class="sym-insert-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-600 font-mono-math text-[11px] font-bold border border-slate-200 transition">(aq)</button>
+            <button type="button" data-insert="(s)" class="sym-insert-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-600 font-mono-math text-[11px] font-bold border border-slate-200 transition">(s)</button>
+            <button type="button" data-insert="(g)" class="sym-insert-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-600 font-mono-math text-[11px] font-bold border border-slate-200 transition">(g)</button>
+          </div>
+
+          <!-- Contextual Formula Chips for Active Reaction -->
+          <div>
+            <div class="text-[10px] font-extrabold uppercase text-slate-400 mb-1">Tap Formula Chips to Insert:</div>
+            <div id="formulaChipContainer" class="flex flex-wrap gap-1.5">
+              <!-- Populated dynamically per reaction -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Detected Species Color Preview Strip -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Detected Substances &amp; Exact Visual Colors</div>
+          <div id="detectedColorsStrip" class="flex flex-wrap gap-1.5 min-h-[28px] items-center text-xs font-mono-math text-slate-500">
+            <span>Type reactants &amp; products to preview substance colors...</span>
+          </div>
+        </div>
+
+        <!-- PRIMARY ACTION BUTTON -->
+        <button id="btnFireAction" type="button" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-extrabold text-sm shadow-sm transition flex items-center justify-center gap-2">
+          <span>🧪</span>
+          <span id="btnFireText">Mix Reagents &amp; Verify Equation (Enter)</span>
+        </button>
+      </div>
+
+      <!-- RECENT SOLVED LOG / STEP-BY-STEP FEEDBACK -->
+      <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Live Chemistry Verification Log</span>
+          <span id="accuracyBadge" class="text-xs font-mono-math font-bold text-emerald-700">Accuracy: 100%</span>
+        </div>
+        <div id="verificationLog" class="text-xs font-mono-math text-slate-700 space-y-1 max-h-24 overflow-y-auto">
+          <div>• Ready! Press "Start 30s" or balance the active inorganic reaction to begin the timer.</div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- 30-SECOND CHALLENGE COMPLETE SUMMARY MODAL -->
+  <div id="resultModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-slate-300 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 border-2 border-blue-200 text-3xl">
+        🏆
+      </div>
+      <div>
+        <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-100 text-blue-800">30-Second Chemistry Blitz Complete!</span>
+        <h2 id="modalHeadline" class="text-2xl font-extrabold text-slate-900 mt-2">Outstanding Inorganic Chemistry!</h2>
+        <div id="modalStars" class="text-2xl mt-1">⭐⭐⭐</div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Final Score</div>
+          <div id="modalFinalScore" class="font-mono-math text-xl font-extrabold text-blue-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Solved</div>
+          <div id="modalSolvedCount" class="font-mono-math text-xl font-extrabold text-emerald-700">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Peak Streak</div>
+          <div id="modalPeakStreak" class="font-mono-math text-xl font-extrabold text-amber-600">0 🔥</div>
+        </div>
+      </div>
+
+      <div id="modalSummaryNote" class="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 text-left font-mono-math space-y-1 max-h-32 overflow-y-auto">
+      </div>
+
+      <div class="flex items-center gap-3 pt-1">
+        <button id="btnPlayAgainModal" type="button" class="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-sm transition">
+          ▶ Play Another 30s Round
+        </button>
+        <button id="btnCloseModal" type="button" class="px-4 py-3 rounded-xl border-2 border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-sm transition">
+          Practice
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // --- WEB AUDIO SYNTHESIZER ---
+      let audioCtx = null;
+      let isMuted = false;
+
+      function ensureAudio() {
+        if (isMuted) return null;
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      ['touchstart', 'pointerdown'].forEach((evtName) => {
+        window.addEventListener(evtName, () => {
+          if (!isMuted && audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        }, { passive: true });
+      });
+
+      function playSound(type) {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'hit') {
+          const freqs = [523.25, 659.25, 783.99, 1046.5];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now + idx * 0.055);
+            gain.gain.setValueAtTime(0.14, now + idx * 0.055);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.055);
+            osc.stop(now + idx * 0.055 + 0.24);
+          });
+        } else if (type === 'miss') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.28);
+        } else if (type === 'tick') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        } else if (type === 'finish') {
+          const freqs = [440, 554.37, 659.25, 880];
+          freqs.forEach((f, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.36);
+          });
+        }
+      }
+
+      // --- INORGANIC COMPOUND EXACT COLOR & PHASE DICTIONARY ---
+      const COMPOUND_COLORS = {
+        // Colorless Aqueous Salts, Acids, Bases & Water
+        'PB(NO3)2':      { display: 'Pb(NO₃)₂',      colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'KI':            { display: 'KI',            colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'KNO3':          { display: 'KNO₃',          colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'NA2SO4':        { display: 'Na₂SO₄',        colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'BACL2':         { display: 'BaCl₂',         colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'NACL':          { display: 'NaCl',          colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'NAOH':          { display: 'NaOH',          colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'AGNO3':         { display: 'AgNO₃',         colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'NANO3':         { display: 'NaNO₃',         colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'H2SO4':         { display: 'H₂SO₄',         colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'HCL':           { display: 'HCl',           colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'K2SO4':         { display: 'K₂SO₄',         colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'H2O':           { display: 'H₂O',           colorName: 'Colorless',           hex: '#E0F2FE', border: '#7DD3FC', phase: 'aq' },
+        'NH4OH':         { display: 'NH₄OH',         colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'NH4CL':         { display: 'NH₄Cl',         colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'NH3':           { display: 'NH₃',           colorName: 'Colorless',           hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'CA(OH)2':       { display: 'Ca(OH)₂',       colorName: 'Colorless Limewater', hex: '#E2E8F0', border: '#94A3B8', phase: 'aq' },
+        'CA(HCO3)2':     { display: 'Ca(HCO₃)₂',     colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'ZNSO4':         { display: 'ZnSO₄',         colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'AL2(SO4)3':     { display: 'Al₂(SO₄)₃',     colorName: 'Colorless',           hex: '#F1F5F9', border: '#94A3B8', phase: 'aq' },
+        'MNSO4':         { display: 'MnSO₄',         colorName: 'Pale-Pink/Colorless', hex: '#FBCFE8', border: '#EC4899', phase: 'aq' },
+
+        // Vivid Transition Metal & Colored Solutions
+        'CUSO4':         { display: 'CuSO₄',         colorName: 'Sky-Blue',            hex: '#38BDF8', border: '#0284C7', phase: 'aq' },
+        'CUCL2':         { display: 'CuCl₂',         colorName: 'Blue-Green',          hex: '#2DD4BF', border: '#0D9488', phase: 'aq' },
+        'FESO4':         { display: 'FeSO₄',         colorName: 'Pale-Green',          hex: '#86EFAC', border: '#16A34A', phase: 'aq' },
+        'FECL2':         { display: 'FeCl₂',         colorName: 'Pale-Green',          hex: '#86EFAC', border: '#16A34A', phase: 'aq' },
+        'FECL3':         { display: 'FeCl₃',         colorName: 'Amber-Yellow',        hex: '#F59E0B', border: '#B45309', phase: 'aq' },
+        'FE2(SO4)3':     { display: 'Fe₂(SO₄)₃',     colorName: 'Faint Straw-Yellow',  hex: '#FEF08A', border: '#CA8A04', phase: 'aq' },
+        'KMNO4':         { display: 'KMnO₄',         colorName: 'Deep Royal-Purple',   hex: '#7E22CE', border: '#581C87', phase: 'aq' },
+        'K2MNO4':        { display: 'K₂MnO₄',        colorName: 'Dark-Green',          hex: '#15803D', border: '#14532D', phase: 'aq' },
+        'K2CR2O7':       { display: 'K₂Cr₂O₇',       colorName: 'Vivid-Orange',        hex: '#F97316', border: '#C2410C', phase: 'aq' },
+        'K2CRO4':        { display: 'K₂CrO₄',        colorName: 'Lemon-Yellow',        hex: '#FDE047', border: '#CA8A04', phase: 'aq' },
+        'CR2(SO4)3':     { display: 'Cr₂(SO₄)₃',     colorName: 'Emerald-Green',       hex: '#10B981', border: '#047857', phase: 'aq' },
+        '[CU(NH3)4]SO4': { display: '[Cu(NH₃)₄]SO₄', colorName: 'Deep Royal-Blue',     hex: '#1E3A8A', border: '#172554', phase: 'aq' },
+        'COSO4':         { display: 'CoSO₄',         colorName: 'Rose-Pink',           hex: '#F43F5E', border: '#BE123C', phase: 'aq' },
+        'NISO4':         { display: 'NiSO₄',         colorName: 'Bright-Green',        hex: '#22C55E', border: '#15803D', phase: 'aq' },
+
+        // Distinct Precipitates (ppt)
+        'PBI2':          { display: 'PbI₂↓',         colorName: 'Canary-Yellow',       hex: '#FACC15', border: '#A16207', phase: 'ppt' },
+        'PBCL2':         { display: 'PbCl₂↓',        colorName: 'White Precipitate',   hex: '#F8FAFC', border: '#64748B', phase: 'ppt' },
+        'BASO4':         { display: 'BaSO₄↓',        colorName: 'Chalky-White',        hex: '#FFFFFF', border: '#64748B', phase: 'ppt' },
+        'AGCL':          { display: 'AgCl↓',         colorName: 'Curdy-White',         hex: '#F8FAFC', border: '#64748B', phase: 'ppt' },
+        'AGBR':          { display: 'AgBr↓',         colorName: 'Pale-Cream Yellow',   hex: '#FEF3C7', border: '#B45309', phase: 'ppt' },
+        'AGI':           { display: 'AgI↓',          colorName: 'Bright-Yellow',       hex: '#FDE047', border: '#A16207', phase: 'ppt' },
+        'CU(OH)2':       { display: 'Cu(OH)₂↓',      colorName: 'Pale Azure-Blue',     hex: '#3B82F6', border: '#1D4ED8', phase: 'ppt' },
+        'FE(OH)3':       { display: 'Fe(OH)₃↓',      colorName: 'Rusty Reddish-Brown', hex: '#9A3412', border: '#431407', phase: 'ppt' },
+        'FE(OH)2':       { display: 'Fe(OH)₂↓',      colorName: 'Dirty-Green',         hex: '#4D7C0F', border: '#1A2E05', phase: 'ppt' },
+        'CACO3':         { display: 'CaCO₃↓',        colorName: 'Milky-White',         hex: '#FFFFFF', border: '#94A3B8', phase: 'ppt' },
+        'ZN(OH)2':       { display: 'Zn(OH)₂↓',      colorName: 'Gelatinous White',    hex: '#F8FAFC', border: '#64748B', phase: 'ppt' },
+        'CUS':           { display: 'CuS↓',          colorName: 'Black Precipitate',   hex: '#0F172A', border: '#020617', phase: 'ppt' },
+        'PBS':           { display: 'PbS↓',          colorName: 'Black Precipitate',   hex: '#0F172A', border: '#020617', phase: 'ppt' },
+        'ZNS':           { display: 'ZnS↓',          colorName: 'White Precipitate',   hex: '#FFFFFF', border: '#64748B', phase: 'ppt' },
+
+        // Solids, Crystals, Oxides & Metals
+        'FE':            { display: 'Fe(s)',         colorName: 'Silvery-Grey',        hex: '#64748B', border: '#334155', phase: 'metal' },
+        'CU':            { display: 'Cu(s)',         colorName: 'Reddish-Brown',       hex: '#B45309', border: '#78350F', phase: 'metal' },
+        'ZN':            { display: 'Zn(s)',         colorName: 'Bluish-Silver',       hex: '#94A3B8', border: '#475569', phase: 'metal' },
+        'AG':            { display: 'Ag(s)',         colorName: 'Lustrous Silver',     hex: '#CBD5E1', border: '#475569', phase: 'metal' },
+        'CU(NO3)2':      { display: 'Cu(NO₃)₂(s)',   colorName: 'Blue Crystals',       hex: '#2563EB', border: '#1E40AF', phase: 'solid' },
+        'CUCO3':         { display: 'CuCO₃(s)',      colorName: 'Malachite-Green',     hex: '#10B981', border: '#047857', phase: 'solid' },
+        'CUO':           { display: 'CuO(s)',        colorName: 'Jet-Black',           hex: '#1E293B', border: '#020617', phase: 'solid' },
+        'CU2O':          { display: 'Cu₂O(s)',       colorName: 'Brick-Red',           hex: '#DC2626', border: '#7F1D1D', phase: 'solid' },
+        'FE2O3':         { display: 'Fe₂O₃(s)',      colorName: 'Reddish-Brown',       hex: '#991B1B', border: '#450A0A', phase: 'solid' },
+        'FE3O4':         { display: 'Fe₃O₄(s)',      colorName: 'Magnetic Black',      hex: '#1E293B', border: '#020617', phase: 'solid' },
+        'PBO':           { display: 'PbO(s)',        colorName: 'Yellow Litharge',     hex: '#EAB308', border: '#854D0E', phase: 'solid' },
+        'PBO2':          { display: 'PbO₂(s)',       colorName: 'Chocolate-Brown',     hex: '#78350F', border: '#451A03', phase: 'solid' },
+        'CAO':           { display: 'CaO(s)',        colorName: 'White Quicklime',     hex: '#F8FAFC', border: '#94A3B8', phase: 'solid' },
+        'MNO2':          { display: 'MnO₂(s)',       colorName: 'Brown-Black',         hex: '#292524', border: '#0C0A09', phase: 'solid' },
+
+        // Gases
+        'NO2':           { display: 'NO₂(g)',        colorName: 'Reddish-Brown Fumes', hex: '#B91C1C', border: '#7F1D1D', phase: 'gas' },
+        'SO2':           { display: 'SO₂(g)',        colorName: 'Colorless Pungent',   hex: '#CBD5E1', border: '#64748B', phase: 'gas' },
+        'SO3':           { display: 'SO₃(g)',        colorName: 'White Misty Fumes',   hex: '#E2E8F0', border: '#64748B', phase: 'gas' },
+        'CO2':           { display: 'CO₂(g)',        colorName: 'Colorless Gas',       hex: '#E2E8F0', border: '#64748B', phase: 'gas' },
+        'O2':            { display: 'O₂(g)',         colorName: 'Colorless Gas',       hex: '#BAE6FD', border: '#0284C7', phase: 'gas' },
+        'H2':            { display: 'H₂(g)',         colorName: 'Colorless Gas',       hex: '#E0F2FE', border: '#0284C7', phase: 'gas' },
+        'CL2':           { display: 'Cl₂(g)',        colorName: 'Greenish-Yellow Gas', hex: '#BEF264', border: '#4D7C0F', phase: 'gas' }
+      };
+
+      // --- CHEMISTRY REACTION BANKS (CLASS 10 & CLASS 11) ---
+      const PRECIP_PROBLEMS = [
+        {
+          id: 'c10_p1',
+          apparatus: 'mix',
+          title: 'Mix colorless Lead(II) Nitrate with colorless Potassium Iodide to form a dense canary-yellow precipitate (PbI₂↓) in colorless KNO₃!',
+          hint: 'Double displacement: Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s)↓ (canary-yellow ppt) + 2KNO₃(aq). Balance I⁻ and K⁺ with coefficient 2.',
+          starterInput: 'Pb(NO3)2 + KI -> ',
+          equation: 'Pb(NO3)2 + 2KI -> PbI2 + 2KNO3',
+          chips: ['Pb(NO3)2', '2KI', 'PbI2', '2KNO3', 'KI', 'KNO3'],
+          targetSummary: 'Canary-Yellow PbI₂↓ + Colorless KNO₃',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#FACC15', pptBorder: '#A16207', pptLabel: 'PbI₂↓ Canary-Yellow', gasHex: null },
+          choices: [
+            { label: 'Pb(NO₃)₂ + 2KI → PbI₂↓ + 2KNO₃', eq: 'Pb(NO3)2 + 2KI -> PbI2 + 2KNO3', correct: true },
+            { label: 'Pb(NO₃)₂ + KI → PbI + KNO₃', eq: 'Pb(NO3)2 + KI -> PbI + KNO3', correct: false },
+            { label: 'Pb(NO₃)₂ + 2KI → PbO + 2KNO₃', eq: 'Pb(NO3)2 + 2KI -> PbO + 2KNO3', correct: false },
+            { label: 'Pb(NO₃)₂ + 2NaCl → PbCl₂↓ + 2NaNO₃', eq: 'Pb(NO3)2 + 2NaCl -> PbCl2 + 2NaNO3', correct: false }
+          ]
+        },
+        {
+          id: 'c10_p2',
+          apparatus: 'mix',
+          title: 'Combine colorless Barium Chloride and colorless Sodium Sulfate to precipitate chalky-white Barium Sulfate (BaSO₄↓) in aqueous NaCl!',
+          hint: 'Double displacement: BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(s)↓ (chalky-white ppt) + 2NaCl(aq). Notice 2 Na⁺ and 2 Cl⁻ form 2NaCl.',
+          starterInput: 'BaCl2 + Na2SO4 -> ',
+          equation: 'BaCl2 + Na2SO4 -> BaSO4 + 2NaCl',
+          chips: ['BaCl2', 'Na2SO4', 'BaSO4', '2NaCl', 'NaCl'],
+          targetSummary: 'Chalky-White BaSO₄↓ + Colorless 2NaCl',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#FFFFFF', pptBorder: '#64748B', pptLabel: 'BaSO₄↓ Chalky-White', gasHex: null },
+          choices: [
+            { label: 'BaCl₂ + Na₂SO₄ → BaSO₄↓ + 2NaCl', eq: 'BaCl2 + Na2SO4 -> BaSO4 + 2NaCl', correct: true },
+            { label: 'BaCl₂ + Na₂SO₄ → BaSO₄↓ + NaCl', eq: 'BaCl2 + Na2SO4 -> BaSO4 + NaCl', correct: false },
+            { label: 'BaCl₂ + Na₂SO₄ → BaS↓ + 2NaClO₂', eq: 'BaCl2 + Na2SO4 -> BaS + 2NaClO2', correct: false },
+            { label: 'BaCl₂ + Na₂CO₃ → BaCO₃↓ + 2NaCl', eq: 'BaCl2 + Na2CO3 -> BaCO3 + 2NaCl', correct: false }
+          ]
+        },
+        {
+          id: 'c10_p3',
+          apparatus: 'mix',
+          title: 'Add colorless Sodium Hydroxide (NaOH) to sky-blue Copper(II) Sulfate to form a pale azure-blue precipitate of Copper(II) Hydroxide!',
+          hint: 'CuSO₄(aq) + 2NaOH(aq) → Cu(OH)₂(s)↓ (pale azure-blue ppt) + Na₂SO₄(aq). Two OH⁻ ions combine with each Cu²⁺.',
+          starterInput: 'CuSO4 + NaOH -> ',
+          equation: 'CuSO4 + 2NaOH -> Cu(OH)2 + Na2SO4',
+          chips: ['CuSO4', '2NaOH', 'Cu(OH)2', 'Na2SO4', 'NaOH', 'CuO'],
+          targetSummary: 'Azure-Blue Cu(OH)₂↓ + Colorless Na₂SO₄',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#3B82F6', pptBorder: '#1D4ED8', pptLabel: 'Cu(OH)₂↓ Azure-Blue', gasHex: null },
+          choices: [
+            { label: 'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄', eq: 'CuSO4 + 2NaOH -> Cu(OH)2 + Na2SO4', correct: true },
+            { label: 'CuSO₄ + NaOH → CuOH↓ + NaSO₄', eq: 'CuSO4 + NaOH -> CuOH + NaSO4', correct: false },
+            { label: 'CuSO₄ + 2NaOH → CuO↓ + Na₂SO₄ + H₂O', eq: 'CuSO4 + 2NaOH -> CuO + Na2SO4 + H2O', correct: false },
+            { label: 'FeSO₄ + 2NaOH → Fe(OH)₂↓ + Na₂SO₄', eq: 'FeSO4 + 2NaOH -> Fe(OH)2 + Na2SO4', correct: false }
+          ]
+        },
+        {
+          id: 'c10_p4',
+          apparatus: 'mix',
+          title: 'React colorless Silver Nitrate (AgNO₃) with colorless Sodium Chloride (NaCl) to form a curdy-white precipitate of Silver Chloride!',
+          hint: 'Halide precipitation test: AgNO₃(aq) + NaCl(aq) → AgCl(s)↓ (curdy-white ppt) + NaNO₃(aq).',
+          starterInput: 'AgNO3 + NaCl -> ',
+          equation: 'AgNO3 + NaCl -> AgCl + NaNO3',
+          chips: ['AgNO3', 'NaCl', 'AgCl', 'NaNO3', 'AgI'],
+          targetSummary: 'Curdy-White AgCl↓ + Colorless NaNO₃',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#F8FAFC', pptBorder: '#64748B', pptLabel: 'AgCl↓ Curdy-White', gasHex: null },
+          choices: [
+            { label: 'AgNO₃ + NaCl → AgCl↓ + NaNO₃', eq: 'AgNO3 + NaCl -> AgCl + NaNO3', correct: true },
+            { label: 'AgNO₃ + KI → AgI↓ + KNO₃', eq: 'AgNO3 + KI -> AgI + KNO3', correct: false },
+            { label: '2AgNO₃ + NaCl → Ag₂Cl + Na(NO₃)₂', eq: '2AgNO3 + NaCl -> Ag2Cl + Na(NO3)2', correct: false },
+            { label: 'AgNO₃ + NaBr → AgBr↓ + NaNO₃', eq: 'AgNO3 + NaBr -> AgBr + NaNO3', correct: false }
+          ]
+        },
+        {
+          id: 'c10_p5',
+          apparatus: 'mix',
+          title: 'Place silvery-grey Iron (Fe) into sky-blue Copper(II) Sulfate (CuSO₄) until the solution fades to pale-green FeSO₄ with reddish-brown Cu!',
+          hint: 'Single displacement: Fe(s) + CuSO₄(aq) [sky-blue] → FeSO₄(aq) [pale-green] + Cu(s) [reddish-brown deposit].',
+          starterInput: 'Fe + CuSO4 -> ',
+          equation: 'Fe + CuSO4 -> FeSO4 + Cu',
+          chips: ['Fe', 'CuSO4', 'FeSO4', 'Cu', 'Fe2(SO4)3'],
+          targetSummary: 'Pale-Green FeSO₄ + Reddish-Brown Cu(s)',
+          targetVisual: { solutionHex: '#86EFAC', pptHex: '#B45309', pptBorder: '#78350F', pptLabel: 'Cu(s) Reddish-Brown', gasHex: null },
+          choices: [
+            { label: 'Fe + CuSO₄ → FeSO₄ + Cu', eq: 'Fe + CuSO4 -> FeSO4 + Cu', correct: true },
+            { label: '2Fe + 3CuSO₄ → Fe₂(SO₄)₃ + 3Cu', eq: '2Fe + 3CuSO4 -> Fe2(SO4)3 + 3Cu', correct: false },
+            { label: 'Fe + CuSO₄ → FeO + CuS', eq: 'Fe + CuSO4 -> FeO + CuS', correct: false },
+            { label: 'Zn + CuSO₄ → ZnSO₄ + Cu', eq: 'Zn + CuSO4 -> ZnSO4 + Cu', correct: false }
+          ]
+        }
+      ];
+
+      const REDOX_PROBLEMS = [
+        {
+          id: 'c11_r1',
+          apparatus: 'mix',
+          title: 'Titrate deep royal-purple KMnO₄ with pale-green FeSO₄ in dilute H₂SO₄ until purple MnO₄⁻ decolorizes to pale-pink Mn²⁺ & yellow Fe³⁺!',
+          hint: 'Mn(+7) → Mn(+2) gains 5e⁻; Fe(+2) → Fe(+3) loses 1e⁻: 2KMnO₄ + 10FeSO₄ + 8H₂SO₄ → K₂SO₄ + 2MnSO₄ + 5Fe₂(SO₄)₃ + 8H₂O.',
+          starterInput: '2KMnO4 + 10FeSO4 + 8H2SO4 -> ',
+          equation: '2KMnO4 + 10FeSO4 + 8H2SO4 -> K2SO4 + 2MnSO4 + 5Fe2(SO4)3 + 8H2O',
+          chips: ['2KMnO4', '10FeSO4', '8H2SO4', 'K2SO4', '2MnSO4', '5Fe2(SO4)3', '8H2O'],
+          targetSummary: 'Decolorized Pale-Pink Mn²⁺ / Straw Fe³⁺',
+          targetVisual: { solutionHex: '#FEF08A', pptHex: null, pptBorder: null, pptLabel: null, gasHex: null },
+          choices: [
+            { label: '2KMnO₄ + 10FeSO₄ + 8H₂SO₄ → K₂SO₄ + 2MnSO₄ + 5Fe₂(SO₄)₃ + 8H₂O', eq: '2KMnO4 + 10FeSO4 + 8H2SO4 -> K2SO4 + 2MnSO4 + 5Fe2(SO4)3 + 8H2O', correct: true },
+            { label: 'KMnO₄ + FeSO₄ + H₂SO₄ → K₂SO₄ + MnO₂ + Fe₂(SO₄)₃ + H₂O', eq: 'KMnO4 + FeSO4 + H2SO4 -> K2SO4 + MnO2 + Fe2(SO4)3 + H2O', correct: false },
+            { label: '2KMnO₄ + 5FeSO₄ + 4H₂SO₄ → K₂SO₄ + 2MnSO₄ + 5FeSO₄ + 4H₂O', eq: '2KMnO4 + 5FeSO4 + 4H2SO4 -> K2SO4 + 2MnSO4 + 5FeSO4 + 4H2O', correct: false },
+            { label: '2KMnO₄ + 10FeSO₄ + 8H₂SO₄ → K₂MnO₄ + 2MnSO₄ + 5Fe₂(SO₄)₃ + 8H₂O', eq: '2KMnO4 + 10FeSO4 + 8H2SO4 -> K2MnO4 + 2MnSO4 + 5Fe2(SO4)3 + 8H2O', correct: false }
+          ]
+        },
+        {
+          id: 'c11_r2',
+          apparatus: 'mix',
+          title: 'Pass colorless SO₂ gas into bright-orange acidified K₂Cr₂O₇ solution until Cr₂O₇²⁻ reduces to emerald-green Cr³⁺ ions!',
+          hint: 'Dichromate test for SO₂: K₂Cr₂O₇(aq) [vivid-orange] + 3SO₂(g) + H₂SO₄(aq) → K₂SO₄(aq) + Cr₂(SO₄)₃(aq) [emerald-green] + H₂O(l).',
+          starterInput: 'K2Cr2O7 + 3SO2 + H2SO4 -> ',
+          equation: 'K2Cr2O7 + 3SO2 + H2SO4 -> K2SO4 + Cr2(SO4)3 + H2O',
+          chips: ['K2Cr2O7', '3SO2', 'H2SO4', 'K2SO4', 'Cr2(SO4)3', 'H2O'],
+          targetSummary: 'Emerald-Green Cr₂(SO₄)₃(aq) Solution',
+          targetVisual: { solutionHex: '#10B981', pptHex: null, pptBorder: null, pptLabel: null, gasHex: null },
+          choices: [
+            { label: 'K₂Cr₂O₇ + 3SO₂ + H₂SO₄ → K₂SO₄ + Cr₂(SO₄)₃ + H₂O', eq: 'K2Cr2O7 + 3SO2 + H2SO4 -> K2SO4 + Cr2(SO4)3 + H2O', correct: true },
+            { label: 'K₂Cr₂O₇ + SO₂ + H₂SO₄ → K₂CrO₄ + CrSO₄ + H₂O', eq: 'K2Cr2O7 + SO2 + H2SO4 -> K2CrO4 + CrSO4 + H2O', correct: false },
+            { label: 'K₂Cr₂O₇ + 3SO₂ + 4H₂SO₄ → K₂SO₄ + 2CrSO₄ + 4H₂O', eq: 'K2Cr2O7 + 3SO2 + 4H2SO4 -> K2SO4 + 2CrSO4 + 4H2O', correct: false },
+            { label: 'K₂Cr₂O₇ + 2NaOH → 2K₂CrO₄ + H₂O', eq: 'K2Cr2O7 + 2NaOH -> 2K2CrO4 + H2O', correct: false }
+          ]
+        },
+        {
+          id: 'c11_r3',
+          apparatus: 'mix',
+          title: 'Add colorless Sodium Hydroxide (NaOH) to amber-yellow Iron(III) Chloride (FeCl₃) to form a rusty reddish-brown Fe(OH)₃↓ precipitate!',
+          hint: 'FeCl₃(aq) [amber-yellow] + 3NaOH(aq) → Fe(OH)₃(s)↓ [rusty reddish-brown] + 3NaCl(aq). Three OH⁻ ions precipitate Fe³⁺.',
+          starterInput: 'FeCl3 + NaOH -> ',
+          equation: 'FeCl3 + 3NaOH -> Fe(OH)3 + 3NaCl',
+          chips: ['FeCl3', '3NaOH', 'Fe(OH)3', '3NaCl', 'Fe(OH)2', 'NaOH'],
+          targetSummary: 'Rusty Reddish-Brown Fe(OH)₃↓ Precipitate',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#9A3412', pptBorder: '#431407', pptLabel: 'Fe(OH)₃↓ Rusty-Brown', gasHex: null },
+          choices: [
+            { label: 'FeCl₃ + 3NaOH → Fe(OH)₃↓ + 3NaCl', eq: 'FeCl3 + 3NaOH -> Fe(OH)3 + 3NaCl', correct: true },
+            { label: 'FeCl₃ + 2NaOH → Fe(OH)₂↓ + 2NaCl', eq: 'FeCl3 + 2NaOH -> Fe(OH)2 + 2NaCl', correct: false },
+            { label: 'FeCl₃ + NaOH → FeO(OH) + NaCl', eq: 'FeCl3 + NaOH -> FeO(OH) + NaCl', correct: false },
+            { label: '2FeCl₃ + 3NaOH → Fe₂O₃ + 3NaCl', eq: '2FeCl3 + 3NaOH -> Fe2O3 + 3NaCl', correct: false }
+          ]
+        },
+        {
+          id: 'c11_r4',
+          apparatus: 'mix',
+          title: 'React pale-green Ferrous Sulfate (FeSO₄) with colorless NaOH to form a dirty-green precipitate of Iron(II) Hydroxide (Fe(OH)₂↓)!',
+          hint: 'Fe²⁺ gives dirty-green Fe(OH)₂(s)↓: FeSO₄(aq) + 2NaOH(aq) → Fe(OH)₂(s)↓ + Na₂SO₄(aq).',
+          starterInput: 'FeSO4 + NaOH -> ',
+          equation: 'FeSO4 + 2NaOH -> Fe(OH)2 + Na2SO4',
+          chips: ['FeSO4', '2NaOH', 'Fe(OH)2', 'Na2SO4', 'Fe(OH)3', 'NaOH'],
+          targetSummary: 'Dirty-Green Fe(OH)₂↓ + Colorless Na₂SO₄',
+          targetVisual: { solutionHex: '#F1F5F9', pptHex: '#4D7C0F', pptBorder: '#1A2E05', pptLabel: 'Fe(OH)₂↓ Dirty-Green', gasHex: null },
+          choices: [
+            { label: 'FeSO₄ + 2NaOH → Fe(OH)₂↓ + Na₂SO₄', eq: 'FeSO4 + 2NaOH -> Fe(OH)2 + Na2SO4', correct: true },
+            { label: 'FeSO₄ + 3NaOH → Fe(OH)₃↓ + Na₂SO₄', eq: 'FeSO4 + 3NaOH -> Fe(OH)3 + Na2SO4', correct: false },
+            { label: 'FeSO₄ + NaOH → FeOH↓ + NaSO₄', eq: 'FeSO4 + NaOH -> FeOH + NaSO4', correct: false },
+            { label: 'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄', eq: 'CuSO4 + 2NaOH -> Cu(OH)2 + Na2SO4', correct: false }
+          ]
+        },
+        {
+          id: 'c11_r5',
+          apparatus: 'mix',
+          title: 'Add excess Ammonium Hydroxide (4NH₄OH) to light-blue CuSO₄ to form the deep royal-blue tetraamminecopper(II) complex [Cu(NH₃)₄]SO₄!',
+          hint: 'CuSO₄(aq) [sky-blue] + 4NH₄OH(aq) → [Cu(NH₃)₄]SO₄(aq) [deep royal-blue] + 4H₂O(l).',
+          starterInput: 'CuSO4 + NH4OH -> ',
+          equation: 'CuSO4 + 4NH4OH -> [Cu(NH3)4]SO4 + 4H2O',
+          chips: ['CuSO4', '4NH4OH', '[Cu(NH3)4]SO4', '4H2O', 'Cu(OH)2', 'NH4OH'],
+          targetSummary: 'Deep Royal-Blue [Cu(NH₃)₄]SO₄ Complex',
+          targetVisual: { solutionHex: '#1E3A8A', pptHex: null, pptBorder: null, pptLabel: null, gasHex: null },
+          choices: [
+            { label: 'CuSO₄ + 4NH₄OH → [Cu(NH₃)₄]SO₄ + 4H₂O', eq: 'CuSO4 + 4NH4OH -> [Cu(NH3)4]SO4 + 4H2O', correct: true },
+            { label: 'CuSO₄ + 2NH₄OH → [Cu(NH₃)₂]SO₄ + 2H₂O', eq: 'CuSO4 + 2NH4OH -> [Cu(NH3)2]SO4 + 2H2O', correct: false },
+            { label: 'CuSO₄ + 2NH₄OH → Cu(OH)₂↓ + (NH₄)₂SO₄', eq: 'CuSO4 + 2NH4OH -> Cu(OH)2 + (NH4)2SO4', correct: false },
+            { label: 'CuSO₄ + 6NH₄OH → [Cu(NH₃)₆]SO₄ + 6H₂O', eq: 'CuSO4 + 6NH4OH -> [Cu(NH3)6]SO4 + 6H2O', correct: false }
+          ]
+        }
+      ];
+
+      const THERMAL_PROBLEMS = [
+        {
+          id: 'c1011_t1',
+          apparatus: 'thermal',
+          title: 'Heat white Lead(II) Nitrate crystals with crackling decrepitation to form yellow Lead(II) Oxide (PbO) residue and reddish-brown NO₂ fumes!',
+          hint: '2Pb(NO₃)₂(s) [white] → Δ → 2PbO(s) [yellow litharge] + 4NO₂(g) [reddish-brown] + O₂(g).',
+          starterInput: '2Pb(NO3)2 -> ',
+          equation: '2Pb(NO3)2 -> 2PbO + 4NO2 + O2',
+          chips: ['2Pb(NO3)2', '2PbO', '4NO2', 'O2', 'PbO', 'PbO2'],
+          targetSummary: 'Yellow PbO(s) + Reddish-Brown NO₂(g)',
+          targetVisual: { solutionHex: null, pptHex: '#EAB308', pptBorder: '#854D0E', pptLabel: 'PbO(s) Yellow Litharge', gasHex: '#B91C1C', gasLabel: 'NO₂(g) Reddish-Brown' },
+          choices: [
+            { label: '2Pb(NO₃)₂ → 2PbO + 4NO₂↑ + O₂↑', eq: '2Pb(NO3)2 -> 2PbO + 4NO2 + O2', correct: true },
+            { label: 'Pb(NO₃)₂ → PbO₂ + 2NO↑', eq: 'Pb(NO3)2 -> PbO2 + 2NO', correct: false },
+            { label: '2Pb(NO₃)₂ → 2Pb + 4NO₂↑ + 2O₂↑', eq: '2Pb(NO3)2 -> 2Pb + 4NO2 + 2O2', correct: false },
+            { label: '2Cu(NO₃)₂ → 2CuO + 4NO₂↑ + O₂↑', eq: '2Cu(NO3)2 -> 2CuO + 4NO2 + O2', correct: false }
+          ]
+        },
+        {
+          id: 'c1011_t2',
+          apparatus: 'thermal',
+          title: 'Strongly heat blue Copper(II) Nitrate crystals to leave a jet-black CuO residue while evolving pungent reddish-brown NO₂ fumes & O₂!',
+          hint: 'Thermal decomposition of nitrate: 2Cu(NO₃)₂(s) [blue] → Δ → 2CuO(s) [jet-black] + 4NO₂(g) [reddish-brown fumes] + O₂(g).',
+          starterInput: '2Cu(NO3)2 -> ',
+          equation: '2Cu(NO3)2 -> 2CuO + 4NO2 + O2',
+          chips: ['2Cu(NO3)2', '2CuO', '4NO2', 'O2', 'CuO', '2NO2'],
+          targetSummary: 'Jet-Black CuO(s) + Reddish-Brown NO₂(g)',
+          targetVisual: { solutionHex: null, pptHex: '#1E293B', pptBorder: '#020617', pptLabel: 'CuO(s) Jet-Black', gasHex: '#B91C1C', gasLabel: 'NO₂(g) Reddish-Brown' },
+          choices: [
+            { label: '2Cu(NO₃)₂ → 2CuO + 4NO₂↑ + O₂↑', eq: '2Cu(NO3)2 -> 2CuO + 4NO2 + O2', correct: true },
+            { label: 'Cu(NO₃)₂ → CuO + 2NO₂↑', eq: 'Cu(NO3)2 -> CuO + 2NO2', correct: false },
+            { label: '2Cu(NO₃)₂ → 2Cu + 4NO₂↑ + 2O₂↑', eq: '2Cu(NO3)2 -> 2Cu + 4NO2 + 2O2', correct: false },
+            { label: '2Pb(NO₃)₂ → 2PbO + 4NO₂↑ + O₂↑', eq: '2Pb(NO3)2 -> 2PbO + 4NO2 + O2', correct: false }
+          ]
+        },
+        {
+          id: 'c1011_t3',
+          apparatus: 'thermal',
+          title: 'Heat pale-green Ferrous Sulfate (FeSO₄) strongly to produce reddish-brown Ferric Oxide (Fe₂O₃) solid and SO₂ + SO₃ gases!',
+          hint: '2FeSO₄(s) [pale-green] → Δ → Fe₂O₃(s) [reddish-brown] + SO₂(g) + SO₃(g).',
+          starterInput: '2FeSO4 -> ',
+          equation: '2FeSO4 -> Fe2O3 + SO2 + SO3',
+          chips: ['2FeSO4', 'Fe2O3', 'SO2', 'SO3', '2FeO', '2SO2'],
+          targetSummary: 'Reddish-Brown Fe₂O₃(s) + SO₂ & SO₃ Gases',
+          targetVisual: { solutionHex: null, pptHex: '#991B1B', pptBorder: '#450A0A', pptLabel: 'Fe₂O₃(s) Reddish-Brown', gasHex: '#CBD5E1', gasLabel: 'SO₂ + SO₃(g)' },
+          choices: [
+            { label: '2FeSO₄ → Fe₂O₃ + SO₂↑ + SO₃↑', eq: '2FeSO4 -> Fe2O3 + SO2 + SO3', correct: true },
+            { label: 'FeSO₄ → FeO + SO₃↑', eq: 'FeSO4 -> FeO + SO3', correct: false },
+            { label: '2FeSO₄ → 2FeO + 2SO₂↑ + O₂↑', eq: '2FeSO4 -> 2FeO + 2SO2 + O2', correct: false },
+            { label: '2FeSO₄ → Fe₃O₄ + SO₂↑ + SO₃↑', eq: '2FeSO4 -> Fe3O4 + SO2 + SO3', correct: false }
+          ]
+        },
+        {
+          id: 'c1011_t4',
+          apparatus: 'bubbler',
+          title: 'Bubble colorless CO₂ gas through clear colorless limewater Ca(OH)₂ until it turns milky-white due to insoluble CaCO₃↓!',
+          hint: 'Limewater test for CO₂: Ca(OH)₂(aq) [colorless] + CO₂(g) → CaCO₃(s)↓ [milky-white] + H₂O(l).',
+          starterInput: 'Ca(OH)2 + CO2 -> ',
+          equation: 'Ca(OH)2 + CO2 -> CaCO3 + H2O',
+          chips: ['Ca(OH)2', 'CO2', 'CaCO3', 'H2O', 'Ca(HCO3)2'],
+          targetSummary: 'Milky-White CaCO₃↓ Suspension + H₂O',
+          targetVisual: { solutionHex: '#F8FAFC', pptHex: '#FFFFFF', pptBorder: '#64748B', pptLabel: 'CaCO₃↓ Milky-White', gasHex: null },
+          choices: [
+            { label: 'Ca(OH)₂ + CO₂ → CaCO₃↓ + H₂O', eq: 'Ca(OH)2 + CO2 -> CaCO3 + H2O', correct: true },
+            { label: 'Ca(OH)₂ + 2CO₂ → Ca(HCO₃)₂', eq: 'Ca(OH)2 + 2CO2 -> Ca(HCO3)2', correct: false },
+            { label: 'CaO + CO₂ → CaCO₃↓', eq: 'CaO + CO2 -> CaCO3', correct: false },
+            { label: 'Ca(OH)₂ + SO₂ → CaSO₃↓ + H₂O', eq: 'Ca(OH)2 + SO2 -> CaSO3 + H2O', correct: false }
+          ]
+        },
+        {
+          id: 'c1011_t5',
+          apparatus: 'thermal',
+          title: 'Heat malachite-green Copper(II) Carbonate powder in a dry tube until it decomposes into jet-black Copper(II) Oxide (CuO) & CO₂!',
+          hint: 'CuCO₃(s) [malachite-green] → Δ → CuO(s) [jet-black] + CO₂(g) [colorless].',
+          starterInput: 'CuCO3 -> ',
+          equation: 'CuCO3 -> CuO + CO2',
+          chips: ['CuCO3', 'CuO', 'CO2', 'Cu2O', 'O2'],
+          targetSummary: 'Jet-Black CuO(s) + Colorless CO₂(g)',
+          targetVisual: { solutionHex: null, pptHex: '#1E293B', pptBorder: '#020617', pptLabel: 'CuO(s) Jet-Black', gasHex: '#E2E8F0', gasLabel: 'CO₂(g) Colorless' },
+          choices: [
+            { label: 'CuCO₃ → CuO + CO₂↑', eq: 'CuCO3 -> CuO + CO2', correct: true },
+            { label: '2CuCO₃ → Cu₂O + 2CO₂↑ + O₂↑', eq: '2CuCO3 -> Cu2O + 2CO2 + O2', correct: false },
+            { label: 'CuCO₃ → Cu + CO₂↑ + O₂↑', eq: 'CuCO3 -> Cu + CO2 + O2', correct: false },
+            { label: 'CaCO₃ → CaO + CO₂↑', eq: 'CaCO3 -> CaO + CO2', correct: false }
+          ]
+        }
+      ];
+
+      // --- CHEMICAL EQUATION PARSER & NORMALIZER ---
+      const SUBSCRIPT_MAP = {
+        '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4',
+        '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9'
+      };
+      const DIGIT_TO_SUB = {
+        '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+        '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+      };
+
+      function formatFormulaDisplay(asciiFormula) {
+        return asciiFormula.replace(/([A-Za-z\)\]])(\d+)/g, (_, prefix, digits) => {
+          return prefix + digits.split('').map((d) => DIGIT_TO_SUB[d] || d).join('');
+        });
+      }
+
+      function normalizeSubscriptsAndArrows(raw) {
+        if (!raw) return '';
+        let s = String(raw);
+        s = s.replace(/[₀-₉]/g, (ch) => SUBSCRIPT_MAP[ch] || ch);
+        s = s.replace(/[→⟶⇒⟹➔➜➝➞=]+/g, '->');
+        s = s.replace(/--?>/g, '->');
+        s = s.replace(/[↓↑∆Δ]/g, ' ');
+        s = s.replace(/\((aq|s|l|g)\)/gi, ' ');
+        return s.trim();
+      }
+
+      function parseSideTerms(sideStr) {
+        if (!sideStr) return [];
+        const rawParts = sideStr.split('+');
+        const terms = [];
+
+        rawParts.forEach((part) => {
+          const cleaned = part.trim();
+          if (!cleaned) return;
+          const match = cleaned.match(/^(\d+)\s*(.+)$/);
+          let coeff = 1;
+          let formulaRaw = cleaned;
+          if (match) {
+            coeff = parseInt(match[1], 10) || 1;
+            formulaRaw = match[2].trim();
+          }
+          if (!formulaRaw) return;
+          const key = formulaRaw.toUpperCase().replace(/\s+/g, '');
+          const meta = COMPOUND_COLORS[key] || {
+            display: formatFormulaDisplay(formulaRaw),
+            colorName: 'Standard Substance',
+            hex: '#CBD5E1',
+            border: '#64748B',
+            phase: 'aq'
+          };
+          terms.push({
+            coeff,
+            formulaRaw,
+            key,
+            meta
+          });
+        });
+
+        return terms;
+      }
+
+      function parseChemicalEquation(raw) {
+        const norm = normalizeSubscriptsAndArrows(raw);
+        const arrowIdx = norm.indexOf('->');
+        if (arrowIdx === -1) {
+          const reactants = parseSideTerms(norm);
+          return {
+            raw,
+            hasArrow: false,
+            reactants,
+            products: [],
+            allTerms: reactants
+          };
+        }
+        const lhs = norm.slice(0, arrowIdx);
+        const rhs = norm.slice(arrowIdx + 2);
+        const reactants = parseSideTerms(lhs);
+        const products = parseSideTerms(rhs);
+        return {
+          raw,
+          hasArrow: true,
+          reactants,
+          products,
+          allTerms: reactants.concat(products)
+        };
+      }
+
+      function compareTermLists(userTerms, targetTerms) {
+        if (userTerms.length !== targetTerms.length) {
+          return { exact: false, speciesMatchOnly: false };
+        }
+        const sortFn = (a, b) => a.key.localeCompare(b.key);
+        const uSorted = userTerms.slice().sort(sortFn);
+        const tSorted = targetTerms.slice().sort(sortFn);
+
+        let exact = true;
+        let speciesMatch = true;
+        for (let i = 0; i < tSorted.length; i++) {
+          if (uSorted[i].key !== tSorted[i].key) {
+            speciesMatch = false;
+            exact = false;
+            break;
+          }
+          if (uSorted[i].coeff !== tSorted[i].coeff) {
+            exact = false;
+          }
+        }
+        return { exact, speciesMatchOnly: !exact && speciesMatch };
+      }
+
+      function deriveVisualOutcomeFromParsed(parsed, fallbackProb) {
+        const r1 = parsed.reactants[0] ? parsed.reactants[0].meta : null;
+        const r2 = parsed.reactants[1] ? parsed.reactants[1].meta : null;
+
+        let solMeta = null;
+        let pptMeta = null;
+        let gasMeta = null;
+
+        parsed.products.forEach((p) => {
+          if (!p.meta) return;
+          if (p.meta.phase === 'ppt' || p.meta.phase === 'solid' || p.meta.phase === 'metal') {
+            if (!pptMeta || p.meta.phase === 'ppt') {
+              pptMeta = p.meta;
+            }
+          } else if (p.meta.phase === 'gas') {
+            if (!gasMeta || p.meta.hex !== '#E2E8F0') {
+              gasMeta = p.meta;
+            }
+          } else if (p.meta.phase === 'aq') {
+            if (!solMeta || (solMeta.hex === '#F1F5F9' || solMeta.hex === '#E0F2FE' || solMeta.hex === '#E2E8F0')) {
+              solMeta = p.meta;
+            }
+          }
+        });
+
+        const targetParsed = parseChemicalEquation(fallbackProb.equation);
+        const lhsCheck = compareTermLists(parsed.reactants, targetParsed.reactants);
+        const rhsCheck = compareTermLists(parsed.products, targetParsed.products);
+        const isExactBalanced = parsed.hasArrow && lhsCheck.exact && rhsCheck.exact;
+        const isUnbalancedPreview = parsed.hasArrow && parsed.products.length > 0 && !isExactBalanced;
+
+        return {
+          r1,
+          r2,
+          solMeta,
+          pptMeta,
+          gasMeta,
+          hasAnyProduct: parsed.products.length > 0,
+          isExactBalanced,
+          isUnbalancedPreview
+        };
+      }
+
+      // --- APPLICATION STATE ---
+      const state = {
+        navMode: 'precip', // 'precip' | 'redox' | 'thermal' | 'blitz'
+        activeTopic: 'precip',
+        problemIndex: { precip: 0, redox: 0, thermal: 0 },
+        currentProblem: PRECIP_PROBLEMS[0],
+        parsedEquation: parseChemicalEquation(PRECIP_PROBLEMS[0].starterInput),
+
+        timerRunning: false,
+        timeRemaining: 30.0,
+        lastFrameTime: 0,
+        lastTickSecond: 10,
+
+        score: 0,
+        streak: 0,
+        peakStreak: 0,
+        solvedCount: 0,
+        attemptCount: 0,
+        bestScore: 0,
+        roundHistory: [],
+
+        animating: false,
+        animStartTime: 0,
+        animDuration: 620,
+        animResult: null,
+        particles: []
+      };
+
+      try {
+        const saved = localStorage.getItem('chemblitz_best_30s');
+        if (saved) state.bestScore = parseInt(saved, 10) || 0;
+      } catch (e) {}
+
+      // --- DOM REFERENCES ---
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const timerDisplay = document.getElementById('timerDisplay');
+      const timerBar = document.getElementById('timerBar');
+      const timerStateLabel = document.getElementById('timerStateLabel');
+      const btnStartChallenge = document.getElementById('btnStartChallenge');
+      const btnStartIcon = document.getElementById('btnStartIcon');
+      const btnStartText = document.getElementById('btnStartText');
+      const btnResetChallenge = document.getElementById('btnResetChallenge');
+
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const streakDisplay = document.getElementById('streakDisplay');
+      const bestScoreDisplay = document.getElementById('bestScoreDisplay');
+      const solvedCountBadge = document.getElementById('solvedCountBadge');
+      const accuracyBadge = document.getElementById('accuracyBadge');
+      const btnMute = document.getElementById('btnMute');
+      const btnSkipProblem = document.getElementById('btnSkipProblem');
+
+      const badgeClassLevel = document.getElementById('badgeClassLevel');
+      const badgeDifficulty = document.getElementById('badgeDifficulty');
+      const challengeTitle = document.getElementById('challengeTitle');
+      const btnToggleHint = document.getElementById('btnToggleHint');
+      const hintBanner = document.getElementById('hintBanner');
+      const hintText = document.getElementById('hintText');
+
+      const canvasEquationPill = document.getElementById('canvasEquationPill');
+      const canvasFeedbackPill = document.getElementById('canvasFeedbackPill');
+      const telemetryLeft = document.getElementById('telemetryLeft');
+      const telemetryRight = document.getElementById('telemetryRight');
+
+      const quickChoiceContainer = document.getElementById('quickChoiceContainer');
+      const liveColorMatchTag = document.getElementById('liveColorMatchTag');
+      const equationInput = document.getElementById('equationInput');
+      const btnClearEquation = document.getElementById('btnClearEquation');
+      const formulaChipContainer = document.getElementById('formulaChipContainer');
+      const detectedColorsStrip = document.getElementById('detectedColorsStrip');
+      const btnFireAction = document.getElementById('btnFireAction');
+      const btnFireText = document.getElementById('btnFireText');
+      const verificationLog = document.getElementById('verificationLog');
+
+      const resultModal = document.getElementById('resultModal');
+      const modalHeadline = document.getElementById('modalHeadline');
+      const modalStars = document.getElementById('modalStars');
+      const modalFinalScore = document.getElementById('modalFinalScore');
+      const modalSolvedCount = document.getElementById('modalSolvedCount');
+      const modalPeakStreak = document.getElementById('modalPeakStreak');
+      const modalSummaryNote = document.getElementById('modalSummaryNote');
+      const btnPlayAgainModal = document.getElementById('btnPlayAgainModal');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+
+      bestScoreDisplay.textContent = String(state.bestScore);
+
+      function addLog(msg, isSuccess) {
+        const div = document.createElement('div');
+        div.className = isSuccess ? 'text-emerald-700 font-bold' : 'text-slate-700';
+        div.textContent = '• ' + msg;
+        verificationLog.prepend(div);
+      }
+
+      function setFeedbackPill(text, tone) {
+        canvasFeedbackPill.textContent = text;
+        if (tone === 'success') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm';
+        } else if (tone === 'error') {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-red-600 text-white font-bold text-xs shadow-sm';
+        } else {
+          canvasFeedbackPill.className = 'px-3 py-1.5 rounded-xl bg-slate-900/90 text-white font-bold text-xs shadow-sm';
+        }
+      }
+
+      // --- LOAD PROBLEM ---
+      function loadProblem(topic, advanceIndex) {
+        state.activeTopic = topic;
+        const bank = topic === 'precip' ? PRECIP_PROBLEMS : (topic === 'redox' ? REDOX_PROBLEMS : THERMAL_PROBLEMS);
+        if (advanceIndex) {
+          state.problemIndex[topic] = (state.problemIndex[topic] + 1) % bank.length;
+        }
+        const prob = bank[state.problemIndex[topic]];
+        state.currentProblem = prob;
+
+        if (topic === 'precip') {
+          badgeClassLevel.textContent = 'CLASS 10 • PRECIPITATION & DISPLACEMENT';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-800';
+          btnFireText.textContent = '🧪 Mix Reagents & Verify Equation (Enter)';
+        } else if (topic === 'redox') {
+          badgeClassLevel.textContent = 'CLASS 11 • REDOX & TRANSITION METALS';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
+          btnFireText.textContent = '⚗️ Titrate / React & Verify Equation (Enter)';
+        } else {
+          badgeClassLevel.textContent = 'CLASS 10 & 11 • THERMAL DECOMPOSITION & GASES';
+          badgeClassLevel.className = 'text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-800';
+          btnFireText.textContent = '🔥 Heat / Bubble & Verify Equation (Enter)';
+        }
+
+        badgeDifficulty.textContent = 'Reaction #' + (state.problemIndex[topic] + 1);
+        challengeTitle.textContent = prob.title;
+        hintText.textContent = prob.hint;
+
+        equationInput.value = prob.starterInput;
+        renderQuickChoices(prob);
+        renderFormulaChips(prob);
+        updateLiveReactionPreview();
+      }
+
+      function renderQuickChoices(prob) {
+        quickChoiceContainer.innerHTML = '';
+        const shuffled = prob.choices.slice().sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((choice) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'px-3 py-2.5 rounded-xl border-2 border-slate-200 hover:border-blue-600 hover:bg-blue-50/60 text-left font-mono-math text-[11px] sm:text-xs font-bold text-slate-800 transition flex items-center justify-between gap-2 active:scale-[0.98]';
+          const spanText = document.createElement('span');
+          spanText.textContent = choice.label;
+          const spanArrow = document.createElement('span');
+          spanArrow.className = 'text-blue-600 font-sans text-xs shrink-0';
+          spanArrow.textContent = '⚡';
+          btn.appendChild(spanText);
+          btn.appendChild(spanArrow);
+
+          btn.addEventListener('click', () => {
+            if (!state.timerRunning && state.timeRemaining === 30.0) {
+              startTimer();
+            }
+            equationInput.value = choice.eq;
+            updateLiveReactionPreview();
+            triggerMixAndVerify(true);
+          });
+
+          quickChoiceContainer.appendChild(btn);
+        });
+      }
+
+      function renderFormulaChips(prob) {
+        formulaChipContainer.innerHTML = '';
+        prob.chips.forEach((chipAscii) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'px-2.5 py-1 rounded-lg bg-blue-50/80 hover:bg-blue-100 text-blue-900 font-mono-math text-xs font-bold border border-blue-200 transition active:scale-95';
+          btn.textContent = formatFormulaDisplay(chipAscii);
+          btn.addEventListener('click', () => {
+            insertAtCursor(chipAscii);
+          });
+          formulaChipContainer.appendChild(btn);
+        });
+      }
+
+      function insertAtCursor(snippet) {
+        const start = equationInput.selectionStart || equationInput.value.length;
+        const end = equationInput.selectionEnd || equationInput.value.length;
+        const val = equationInput.value;
+        const needsSpaceBefore = start > 0 && val[start - 1] !== ' ' && !snippet.startsWith(' ') && !/^\d+$/.test(snippet);
+        const prefix = needsSpaceBefore ? ' ' : '';
+        const inserted = prefix + snippet;
+        equationInput.value = val.slice(0, start) + inserted + val.slice(end);
+        const newPos = start + inserted.length;
+        equationInput.focus();
+        equationInput.setSelectionRange(newPos, newPos);
+        updateLiveReactionPreview();
+      }
+
+      // --- LIVE EQUATION PARSE & COLOR PREVIEW ---
+      function updateLiveReactionPreview() {
+        const rawVal = equationInput.value;
+        const parsed = parseChemicalEquation(rawVal);
+        state.parsedEquation = parsed;
+
+        const prob = state.currentProblem;
+        const vis = deriveVisualOutcomeFromParsed(parsed, prob);
+
+        // Top canvas equation pill
+        const displayEq = rawVal.trim()
+          ? formatFormulaDisplay(rawVal.trim().replace(/->/g, '→'))
+          : formatFormulaDisplay(prob.starterInput.replace(/->/g, '→')) + '?';
+        canvasEquationPill.textContent = displayEq;
+
+        // Live match tag
+        if (vis.isExactBalanced) {
+          liveColorMatchTag.textContent = '✓ Balanced Match';
+          liveColorMatchTag.className = 'text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800';
+        } else if (vis.isUnbalancedPreview) {
+          liveColorMatchTag.textContent = '⚖ Check Coefficients';
+          liveColorMatchTag.className = 'text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800';
+        } else {
+          liveColorMatchTag.textContent = 'Live Color Sim';
+          liveColorMatchTag.className = 'text-[11px] font-mono-math font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700';
+        }
+
+        // Detected substances strip
+        detectedColorsStrip.innerHTML = '';
+        if (parsed.allTerms.length === 0) {
+          const span = document.createElement('span');
+          span.textContent = 'Type reactants & products to preview substance colors...';
+          detectedColorsStrip.appendChild(span);
+        } else {
+          parsed.allTerms.forEach((term) => {
+            const pill = document.createElement('span');
+            pill.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-mono-math font-bold text-slate-800 shadow-2xs';
+            const dot = document.createElement('span');
+            dot.className = 'w-3 h-3 rounded-full inline-block shrink-0 border';
+            dot.style.backgroundColor = term.meta.hex;
+            dot.style.borderColor = term.meta.border;
+            const label = document.createElement('span');
+            const coeffStr = term.coeff > 1 ? String(term.coeff) : '';
+            label.textContent = `${coeffStr}${term.meta.display} (${term.meta.colorName})`;
+            pill.appendChild(dot);
+            pill.appendChild(label);
+            detectedColorsStrip.appendChild(pill);
+          });
+        }
+
+        // Bottom telemetry strip
+        if (parsed.products.length === 0) {
+          telemetryLeft.textContent = 'Your Output: Enter products after → to visualize exact colors';
+        } else {
+          const prodDesc = parsed.products
+            .map((p) => `${p.coeff > 1 ? p.coeff : ''}${p.meta.display} [${p.meta.colorName}]`)
+            .join(' + ');
+          telemetryLeft.textContent = `Your Output: ${prodDesc}`;
+        }
+        telemetryRight.textContent = `Target Outcome: ${prob.targetSummary}`;
+      }
+
+      // --- VERIFY BALANCED EQUATION & TRIGGER REACTION ---
+      function triggerMixAndVerify(isQuickCard) {
+        if (state.animating) return;
+
+        if (!state.timerRunning && state.timeRemaining === 30.0) {
+          startTimer();
+        }
+
+        const prob = state.currentProblem;
+        const userParsed = parseChemicalEquation(equationInput.value);
+        const targetParsed = parseChemicalEquation(prob.equation);
+
+        const lhsCheck = compareTermLists(userParsed.reactants, targetParsed.reactants);
+        const rhsCheck = compareTermLists(userParsed.products, targetParsed.products);
+        const isHit = userParsed.hasArrow && lhsCheck.exact && rhsCheck.exact;
+
+        const cleanSummary = formatFormulaDisplay(prob.equation.replace(/->/g, '→'));
+
+        state.attemptCount += 1;
+        state.animating = true;
+        state.animStartTime = performance.now();
+        state.animDuration = 600;
+        state.animResult = { isHit, isQuickCard };
+
+        if (isHit) {
+          playSound('hit');
+          state.streak += 1;
+          if (state.streak > state.peakStreak) state.peakStreak = state.streak;
+          state.solvedCount += 1;
+
+          const basePts = 200;
+          const speedBonus = isQuickCard ? 150 : 60;
+          const streakBonus = state.streak * 40;
+          const gained = basePts + speedBonus + streakBonus;
+          state.score += gained;
+
+          if (state.score > state.bestScore) {
+            state.bestScore = state.score;
+            bestScoreDisplay.textContent = String(state.bestScore);
+            try {
+              localStorage.setItem('chemblitz_best_30s', String(state.bestScore));
+            } catch (e) {}
+          }
+
+          setFeedbackPill(`🧪 EXACT BALANCED REACTION! +${gained} pts (Streak ×${state.streak})`, 'success');
+          addLog(`SOLVED (+${gained} pts): ${cleanSummary} → ${prob.targetSummary}`, true);
+          state.roundHistory.push(`✓ ${cleanSummary} (+${gained})`);
+          spawnCelebrationParticles();
+        } else {
+          playSound('miss');
+          state.streak = 0;
+
+          if (!userParsed.hasArrow || userParsed.products.length === 0) {
+            setFeedbackPill('✗ Include "->" and complete the products on the right!', 'error');
+            addLog('Incomplete equation: enter reactants -> products.', false);
+          } else if (lhsCheck.speciesMatchOnly || rhsCheck.speciesMatchOnly) {
+            setFeedbackPill('⚖ Right substances, check stoichiometric balancing numbers!', 'error');
+            addLog('Unbalanced coefficients: check atom counts on both sides.', false);
+          } else {
+            setFeedbackPill('✗ Incorrect products or reactants! Check Reaction Principle.', 'error');
+            addLog(`Mismatch for: ${equationInput.value.trim()}`, false);
+          }
+        }
+
+        updateScoreHUD();
+      }
+
+      function updateScoreHUD() {
+        scoreDisplay.textContent = String(state.score);
+        streakDisplay.textContent = `${state.streak} 🔥`;
+        solvedCountBadge.textContent = `Solved: ${state.solvedCount}`;
+        const acc = state.attemptCount > 0 ? Math.round((state.solvedCount / state.attemptCount) * 100) : 100;
+        accuracyBadge.textContent = `Accuracy: ${acc}%`;
+      }
+
+      function spawnCelebrationParticles() {
+        state.particles = [];
+        for (let i = 0; i < 30; i++) {
+          const angle = (Math.PI * 2 * i) / 30;
+          const speed = 1.6 + Math.random() * 3.6;
+          state.particles.push({
+            x: 0.48 * canvas.width,
+            y: 0.56 * canvas.height,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: ['#1D4ED8', '#059669', '#FACC15', '#7E22CE', '#F97316'][i % 5]
+          });
+        }
+      }
+
+      // --- 30-SECOND TIMER ---
+      function startTimer() {
+        if (state.timerRunning) return;
+        if (state.timeRemaining <= 0) {
+          resetChallengeStats();
+        }
+        state.timerRunning = true;
+        state.lastFrameTime = performance.now();
+        state.lastTickSecond = Math.ceil(state.timeRemaining);
+        btnStartIcon.textContent = '⏸';
+        btnStartText.textContent = 'Pause';
+        timerStateLabel.textContent = 'LIVE 30s BLITZ';
+        setFeedbackPill('⏱ 30-Second Chemistry Challenge Active!', 'neutral');
+      }
+
+      function pauseTimer() {
+        state.timerRunning = false;
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Resume';
+        timerStateLabel.textContent = 'PAUSED';
+      }
+
+      function resetChallengeStats() {
+        state.timerRunning = false;
+        state.timeRemaining = 30.0;
+        state.score = 0;
+        state.streak = 0;
+        state.peakStreak = 0;
+        state.solvedCount = 0;
+        state.attemptCount = 0;
+        state.roundHistory = [];
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'Start 30s';
+        timerStateLabel.textContent = '30s Challenge';
+        timerDisplay.textContent = '30.0s';
+        timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-blue-700';
+        timerBar.style.width = '100%';
+        timerBar.className = 'h-full bg-blue-600 transition-all duration-100';
+        updateScoreHUD();
+        setFeedbackPill('Timer reset to 30.0s. Enter a balanced equation or tap a card!', 'neutral');
+      }
+
+      function finishChallenge() {
+        state.timerRunning = false;
+        state.timeRemaining = 0;
+        timerDisplay.textContent = '0.0s';
+        timerBar.style.width = '0%';
+        btnStartIcon.textContent = '▶';
+        btnStartText.textContent = 'New 30s';
+        playSound('finish');
+
+        modalFinalScore.textContent = String(state.score);
+        modalSolvedCount.textContent = String(state.solvedCount);
+        modalPeakStreak.textContent = `${state.peakStreak} 🔥`;
+
+        let stars = '⭐';
+        let headline = 'Good Effort! Keep Balancing Reactions!';
+        if (state.solvedCount >= 5 || state.score >= 1800) {
+          stars = '⭐⭐⭐';
+          headline = 'Master of Class 10 & 11 Inorganic Chemistry!';
+        } else if (state.solvedCount >= 3 || state.score >= 900) {
+          stars = '⭐⭐';
+          headline = 'Sharp Laboratory Precision!';
+        }
+        modalStars.textContent = stars;
+        modalHeadline.textContent = headline;
+
+        modalSummaryNote.innerHTML = '';
+        if (state.roundHistory.length === 0) {
+          const line = document.createElement('div');
+          line.textContent = 'No equations verified in this 30s window. Use the Instant Equation Solve cards or formula chips for rapid scoring!';
+          modalSummaryNote.appendChild(line);
+        } else {
+          state.roundHistory.forEach((item) => {
+            const line = document.createElement('div');
+            line.textContent = item;
+            modalSummaryNote.appendChild(line);
+          });
+        }
+
+        resultModal.classList.remove('hidden');
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(240, Math.floor(rect.height * dpr));
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // --- CANVAS DRAWING HELPERS ---
+      function roundRectPath(x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function drawColorSwatchTag(cx, cy, dpr, formulaText, colorText, swatchHex, borderHex) {
+        ctx.save();
+        ctx.font = `700 ${9.5 * dpr}px "JetBrains Mono", monospace`;
+        const w1 = ctx.measureText(formulaText).width;
+        ctx.font = `600 ${8.5 * dpr}px "Inter", sans-serif`;
+        const w2 = ctx.measureText(colorText).width;
+
+        const padX = 8 * dpr;
+        const swatchR = 6 * dpr;
+        const tagW = Math.max(w1, w2) + padX * 2 + swatchR * 2 + 7 * dpr;
+        const tagH = 30 * dpr;
+
+        const margin = 8 * dpr;
+        const x = Math.max(margin, Math.min(canvas.width - tagW - margin, cx - tagW / 2));
+        const y = Math.max(46 * dpr, Math.min(canvas.height - tagH - 18 * dpr, cy - tagH / 2));
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+        ctx.strokeStyle = borderHex || '#94A3B8';
+        ctx.lineWidth = 1.6 * dpr;
+        roundRectPath(x, y, tagW, tagH, 8 * dpr);
+        ctx.fill();
+        ctx.stroke();
+
+        // Color swatch circle
+        const dotX = x + padX + swatchR;
+        const dotY = y + tagH / 2;
+        ctx.fillStyle = swatchHex || '#E2E8F0';
+        ctx.strokeStyle = borderHex || '#64748B';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, swatchR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Formula & color name text
+        const textX = dotX + swatchR + 6 * dpr;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#0F172A';
+        ctx.font = `800 ${9.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.fillText(formulaText, textX, y + 12.5 * dpr);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = `600 ${8.5 * dpr}px "Inter", sans-serif`;
+        ctx.fillText(colorText, textX, y + 23.5 * dpr);
+        ctx.restore();
+      }
+
+      // --- MAIN RENDER LOOP ---
+      function renderLoop(now) {
+        if (state.timerRunning) {
+          const dt = (now - state.lastFrameTime) / 1000;
+          state.lastFrameTime = now;
+          state.timeRemaining = Math.max(0, state.timeRemaining - dt);
+
+          timerDisplay.textContent = state.timeRemaining.toFixed(1) + 's';
+          const pct = (state.timeRemaining / 30.0) * 100;
+          timerBar.style.width = `${pct}%`;
+
+          if (state.timeRemaining <= 5.0) {
+            timerBar.className = 'h-full bg-red-600';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-red-600 timer-urgent';
+            const ceilSec = Math.ceil(state.timeRemaining);
+            if (ceilSec < state.lastTickSecond && ceilSec > 0) {
+              state.lastTickSecond = ceilSec;
+              playSound('tick');
+            }
+          } else if (state.timeRemaining <= 12.0) {
+            timerBar.className = 'h-full bg-amber-500';
+            timerDisplay.className = 'font-mono-math text-base sm:text-lg font-extrabold text-amber-600';
+          }
+
+          if (state.timeRemaining <= 0) {
+            finishChallenge();
+          }
+        } else {
+          state.lastFrameTime = now;
+        }
+
+        let animProgress = 1;
+        if (state.animating) {
+          animProgress = Math.min(1, (now - state.animStartTime) / state.animDuration);
+          if (animProgress >= 1) {
+            state.animating = false;
+            const wasHit = state.animResult && state.animResult.isHit;
+            state.animResult = null;
+            if (wasHit) {
+              if (state.navMode === 'blitz') {
+                const order = ['precip', 'redox', 'thermal'];
+                const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+                loadProblem(nextTopic, true);
+              } else {
+                loadProblem(state.activeTopic, true);
+              }
+            }
+          }
+        }
+
+        const W = canvas.width;
+        const H = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+
+        // Pure White Studio Background & Subtle Lab Grid
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = '#F8FAFC';
+        ctx.lineWidth = 1 * dpr;
+        const step = 28 * dpr;
+        for (let gx = 0; gx < W; gx += step) {
+          ctx.beginPath();
+          ctx.moveTo(gx, 0);
+          ctx.lineTo(gx, H);
+          ctx.stroke();
+        }
+        for (let gy = 0; gy < H; gy += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, gy);
+          ctx.lineTo(W, gy);
+          ctx.stroke();
+        }
+
+        // Laboratory Bench Surface
+        const benchY = H - 24 * dpr;
+        ctx.fillStyle = '#F1F5F9';
+        ctx.fillRect(0, benchY, W, H - benchY);
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(0, benchY);
+        ctx.lineTo(W, benchY);
+        ctx.stroke();
+
+        const prob = state.currentProblem;
+        const vis = deriveVisualOutcomeFromParsed(state.parsedEquation, prob);
+
+        if (prob.apparatus === 'thermal') {
+          drawThermalApparatus(W, H, benchY, dpr, now, animProgress, prob, vis);
+        } else if (prob.apparatus === 'bubbler') {
+          drawLimewaterBubblerApparatus(W, H, benchY, dpr, now, animProgress, prob, vis);
+        } else {
+          drawMixingApparatus(W, H, benchY, dpr, now, animProgress, prob, vis);
+        }
+
+        // Target Visual Reference Card in Top-Right of Apparatus Canvas
+        drawTargetReferenceCard(W, H, dpr, prob);
+
+        // Celebration Particles
+        if (state.particles.length > 0) {
+          state.particles.forEach((p) => {
+            p.x += p.vx * dpr;
+            p.y += p.vy * dpr;
+            p.alpha -= 0.024;
+            if (p.alpha > 0) {
+              ctx.save();
+              ctx.globalAlpha = Math.max(0, p.alpha);
+              ctx.fillStyle = p.color;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 4.5 * dpr, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }
+          });
+          state.particles = state.particles.filter((p) => p.alpha > 0);
+        }
+
+        requestAnimationFrame(renderLoop);
+      }
+
+      // --- SCENE A: DUAL-REAGENT INWARD-TILTED BOTTLES & GRADUATED GLASS BEAKER ---
+      function drawMixingApparatus(W, H, benchY, dpr, now, animT, prob, vis) {
+        // Wide graduated glass reaction beaker at horizontal center (bx = W * 0.46)
+        const bx = W * 0.46;
+        const beakerBottomY = benchY - 12 * dpr;
+        const beakerH = Math.min(155 * dpr, H * 0.43);
+        const beakerW = Math.min(148 * dpr, W * 0.30);
+        const beakerHalfW = beakerW / 2;
+        const beakerTopY = beakerBottomY - beakerH;
+
+        // Left & Right Reagent Bottles positioned above & outward, tilted INWARD toward beaker
+        const offsetX = Math.min(128 * dpr, W * 0.25);
+        const leftX = bx - offsetX;
+        const rightX = bx + offsetX;
+        const bottleY = beakerTopY - 46 * dpr;
+
+        // Positive angle (+1.82 rad clockwise) points local -Y nozzle RIGHT & DOWNWARD into beaker
+        // Negative angle (-1.82 rad counter-clockwise) points local -Y nozzle LEFT & DOWNWARD into beaker
+        const leftTilt = 1.82;
+        const rightTilt = -1.82;
+        const tipDist = 42 * dpr;
+
+        const r1Meta = vis.r1 || { display: 'Reactant 1', colorName: 'Awaiting Input', hex: '#E2E8F0', border: '#94A3B8' };
+        const r2Meta = vis.r2 || { display: 'Reactant 2', colorName: 'Awaiting Input', hex: '#E2E8F0', border: '#94A3B8' };
+        const hasSecondBottle = state.parsedEquation.reactants.length >= 2 || !state.parsedEquation.hasArrow;
+
+        // Exact nozzle tip world coordinates
+        const leftTipX = leftX + tipDist * Math.sin(leftTilt);
+        const leftTipY = bottleY - tipDist * Math.cos(leftTilt);
+
+        const rightTipX = rightX + tipDist * Math.sin(rightTilt);
+        const rightTipY = bottleY - tipDist * Math.cos(rightTilt);
+
+        // 1. Draw Inward-Tilted Reagent Bottles with Gravity-Aligned Horizontal Meniscus
+        drawTiltedReagentBottle(leftX, bottleY, leftTilt, dpr, r1Meta.hex, r1Meta.border);
+        drawColorSwatchTag(
+          leftX - 4 * dpr,
+          bottleY - 48 * dpr,
+          dpr,
+          `${r1Meta.display} (aq)`,
+          r1Meta.colorName,
+          r1Meta.hex,
+          r1Meta.border
+        );
+
+        if (hasSecondBottle) {
+          drawTiltedReagentBottle(rightX, bottleY, rightTilt, dpr, r2Meta.hex, r2Meta.border);
+          drawColorSwatchTag(
+            rightX + 4 * dpr,
+            bottleY - 48 * dpr,
+            dpr,
+            `${r2Meta.display} (aq)`,
+            r2Meta.colorName,
+            r2Meta.hex,
+            r2Meta.border
+          );
+        }
+
+        // Determine liquid solution color inside beaker
+        let liquidHex = '#F1F5F9';
+        if (vis.solMeta) {
+          liquidHex = vis.solMeta.hex;
+        } else if (vis.r1 && vis.r1.hex !== '#E2E8F0' && vis.r1.hex !== '#F1F5F9' && vis.r1.phase === 'aq') {
+          liquidHex = vis.r1.hex;
+        } else if (vis.r2 && vis.r2.hex !== '#E2E8F0' && vis.r2.hex !== '#F1F5F9' && vis.r2.phase === 'aq') {
+          liquidHex = vis.r2.hex;
+        }
+
+        const liquidTopY = beakerBottomY - beakerH * 0.56;
+
+        // 2. Smooth Curved Pouring Streams & Animated Falling Droplets from Nozzles into Beaker
+        const streamAlpha = state.animating ? 0.92 : 0.62;
+        const leftStreamColor = (r1Meta.hex === '#E2E8F0' || r1Meta.hex === '#F1F5F9') ? '#94A3B8' : r1Meta.hex;
+        const rightStreamColor = (r2Meta.hex === '#E2E8F0' || r2Meta.hex === '#F1F5F9') ? '#94A3B8' : r2Meta.hex;
+
+        drawPouringStreamAndDroplets(
+          leftTipX,
+          leftTipY,
+          bx - beakerHalfW * 0.34,
+          liquidTopY + 6 * dpr,
+          leftStreamColor,
+          streamAlpha,
+          now,
+          dpr
+        );
+
+        if (hasSecondBottle) {
+          drawPouringStreamAndDroplets(
+            rightTipX,
+            rightTipY,
+            bx + beakerHalfW * 0.34,
+            liquidTopY + 6 * dpr,
+            rightStreamColor,
+            streamAlpha,
+            now + 320,
+            dpr
+          );
+        }
+
+        // 3. Graduated Glass Beaker Interior Clip Path & Reaction Contents
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.lineTo(bx - beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.quadraticCurveTo(bx - beakerHalfW, beakerBottomY, bx - beakerHalfW + 12 * dpr, beakerBottomY);
+        ctx.lineTo(bx + beakerHalfW - 12 * dpr, beakerBottomY);
+        ctx.quadraticCurveTo(bx + beakerHalfW, beakerBottomY, bx + beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.lineTo(bx + beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.closePath();
+        ctx.clip();
+
+        // Aqueous Solution Fill with Subtle Surface Wave
+        const wave = Math.sin(now * 0.005) * 2.5 * dpr;
+        ctx.fillStyle = liquidHex;
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW - 4 * dpr, liquidTopY + wave);
+        ctx.quadraticCurveTo(bx, liquidTopY - wave, bx + beakerHalfW + 4 * dpr, liquidTopY + wave);
+        ctx.lineTo(bx + beakerHalfW + 4 * dpr, beakerBottomY + 4 * dpr);
+        ctx.lineTo(bx - beakerHalfW - 4 * dpr, beakerBottomY + 4 * dpr);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top Meniscus Highlight Line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW, liquidTopY + wave);
+        ctx.quadraticCurveTo(bx, liquidTopY - wave, bx + beakerHalfW, liquidTopY + wave);
+        ctx.stroke();
+
+        // Effervescent Reaction Bubbles inside Liquid
+        for (let b = 0; b < 10; b++) {
+          const bSpan = Math.max(20, beakerW * 0.72);
+          const bxDot = bx - bSpan / 2 + ((b * 29) % bSpan);
+          const cycle = ((now * 0.045 + b * 17) % (beakerH * 0.48));
+          const byDot = beakerBottomY - 10 * dpr - cycle;
+          if (byDot > liquidTopY + 5 * dpr) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.beginPath();
+            ctx.arc(bxDot, byDot, (2 + (b % 2.5)) * dpr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Settled Precipitate / Metallic Deposit Layer at Bottom of Beaker
+        if (vis.pptMeta) {
+          const pptHeight = 25 * dpr;
+          const pptTopY = beakerBottomY - pptHeight;
+          ctx.fillStyle = vis.pptMeta.hex;
+          ctx.beginPath();
+          ctx.moveTo(bx - beakerHalfW, beakerBottomY);
+          ctx.lineTo(bx - beakerHalfW, pptTopY + 3 * dpr);
+          ctx.quadraticCurveTo(bx, pptTopY - 4 * dpr, bx + beakerHalfW, pptTopY + 3 * dpr);
+          ctx.lineTo(bx + beakerHalfW, beakerBottomY);
+          ctx.closePath();
+          ctx.fill();
+
+          // Granular precipitate texture dots
+          ctx.fillStyle = vis.pptMeta.border || '#475569';
+          for (let g = 0; g < 22; g++) {
+            const gx = bx - beakerHalfW * 0.82 + ((g * 19) % Math.max(20, beakerW * 0.82));
+            const gy = beakerBottomY - 5 * dpr - ((g * 7) % 15) * dpr;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 1.8 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Left Vertical Glass Specular Reflection Strip
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
+        ctx.fillRect(bx - beakerHalfW + 7 * dpr, beakerTopY + 12 * dpr, 7 * dpr, beakerH - 24 * dpr);
+
+        ctx.restore();
+
+        // 4. Crisp Graduated Glass Beaker Outline (with Top-Left Pouring Spout & Rim)
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW - 8 * dpr, beakerTopY);
+        ctx.lineTo(bx - beakerHalfW, beakerTopY + 8 * dpr);
+        ctx.lineTo(bx - beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.quadraticCurveTo(bx - beakerHalfW, beakerBottomY, bx - beakerHalfW + 12 * dpr, beakerBottomY);
+        ctx.lineTo(bx + beakerHalfW - 12 * dpr, beakerBottomY);
+        ctx.quadraticCurveTo(bx + beakerHalfW, beakerBottomY, bx + beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.lineTo(bx + beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.lineTo(bx + beakerHalfW + 5 * dpr, beakerTopY + 2 * dpr);
+        ctx.stroke();
+
+        // Graduated Volume Tick Marks (50, 100, 150, 200 mL) along Right Side of Beaker
+        ctx.strokeStyle = '#64748B';
+        ctx.fillStyle = '#475569';
+        ctx.lineWidth = 1.4 * dpr;
+        ctx.font = `700 ${8.5 * dpr}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'right';
+        const gradMarks = [
+          { frac: 0.22, label: '50' },
+          { frac: 0.42, label: '100' },
+          { frac: 0.62, label: '150' },
+          { frac: 0.82, label: '200mL' }
+        ];
+        gradMarks.forEach((gm) => {
+          const gy = beakerBottomY - beakerH * gm.frac;
+          const tickW = gm.label.includes('mL') ? 13 * dpr : 9 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(bx + beakerHalfW - tickW, gy);
+          ctx.lineTo(bx + beakerHalfW - 2 * dpr, gy);
+          ctx.stroke();
+          ctx.fillText(gm.label, bx + beakerHalfW - tickW - 3 * dpr, gy + 3 * dpr);
+        });
+
+        // Subtle Unbalanced Preview Badge if products typed without full stoichiometry
+        if (vis.isUnbalancedPreview) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(254, 243, 199, 0.95)';
+          ctx.strokeStyle = '#F59E0B';
+          ctx.lineWidth = 1.4 * dpr;
+          roundRectPath(bx - 56 * dpr, beakerTopY - 14 * dpr, 112 * dpr, 18 * dpr, 6 * dpr);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#92400E';
+          ctx.font = `800 ${8.5 * dpr}px "Inter", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText('⚖️ UNBALANCED PREVIEW', bx, beakerTopY - 2 * dpr);
+          ctx.restore();
+        }
+
+        // 5. Upright Product Color Swatch Callout Tags beside Beaker
+        if (vis.solMeta) {
+          drawColorSwatchTag(
+            bx - beakerHalfW - 64 * dpr,
+            beakerBottomY - beakerH * 0.42,
+            dpr,
+            vis.solMeta.display,
+            `Solution: ${vis.solMeta.colorName}`,
+            vis.solMeta.hex,
+            vis.solMeta.border
+          );
+        }
+        if (vis.pptMeta) {
+          drawColorSwatchTag(
+            bx + beakerHalfW + 68 * dpr,
+            beakerBottomY - 24 * dpr,
+            dpr,
+            vis.pptMeta.display,
+            `Solid/Ppt: ${vis.pptMeta.colorName}`,
+            vis.pptMeta.hex,
+            vis.pptMeta.border
+          );
+        }
+      }
+
+      function drawPouringStreamAndDroplets(startX, startY, endX, endY, colorHex, alpha, timeMs, dpr) {
+        const ctrlX = (startX + endX) * 0.5;
+        const ctrlY = Math.min(startY, endY) + Math.abs(endY - startY) * 0.15;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = colorHex;
+        ctx.lineWidth = 3.2 * dpr;
+        ctx.lineCap = 'round';
+        ctx.setLineDash([7 * dpr, 4 * dpr]);
+        ctx.lineDashOffset = -(timeMs * 0.075) % 22;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Animated falling droplets along the Bezier trajectory
+        for (let i = 0; i < 3; i++) {
+          const t = ((timeMs * 0.0016 + i / 3) % 1);
+          const invT = 1 - t;
+          const dx = invT * invT * startX + 2 * invT * t * ctrlX + t * t * endX;
+          const dy = invT * invT * startY + 2 * invT * t * ctrlY + t * t * endY;
+          ctx.fillStyle = colorHex;
+          ctx.beginPath();
+          ctx.arc(dx, dy, 3.2 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Tilted Reagent Bottle with Local -Y Nozzle Axis & Gravity-Aligned Horizontal Meniscus
+      function drawTiltedReagentBottle(cx, cy, tiltAngle, dpr, liquidHex, borderHex) {
+        const bw = 30 * dpr;
+        const bh = 44 * dpr;
+        const halfW = bw / 2;
+        const halfH = bh / 2;
+        const neckHalfW = 5.5 * dpr;
+        const neckTopY = -halfH - 11 * dpr;
+        const tipDist = 42 * dpr;
+
+        function traceBottlePath() {
+          ctx.beginPath();
+          ctx.moveTo(-halfW + 5 * dpr, halfH);
+          ctx.quadraticCurveTo(-halfW, halfH, -halfW, halfH - 5 * dpr);
+          ctx.lineTo(-halfW, -halfH + 8 * dpr);
+          ctx.lineTo(-neckHalfW, -halfH);
+          ctx.lineTo(-neckHalfW, neckTopY);
+          ctx.lineTo(-2 * dpr, -tipDist);
+          ctx.lineTo(2 * dpr, -tipDist);
+          ctx.lineTo(neckHalfW, neckTopY);
+          ctx.lineTo(neckHalfW, -halfH);
+          ctx.lineTo(halfW, -halfH + 8 * dpr);
+          ctx.lineTo(halfW, halfH - 5 * dpr);
+          ctx.quadraticCurveTo(halfW, halfH, halfW - 5 * dpr, halfH);
+          ctx.closePath();
+        }
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(tiltAngle);
+
+        // 1. Clip to bottle interior and draw gravity-aligned horizontal liquid meniscus
+        ctx.save();
+        traceBottlePath();
+        ctx.clip();
+
+        ctx.rotate(-tiltAngle);
+        const meniscusY = 3 * dpr;
+        ctx.fillStyle = liquidHex;
+        ctx.fillRect(-65 * dpr, meniscusY, 130 * dpr, 70 * dpr);
+
+        ctx.strokeStyle = borderHex || '#64748B';
+        ctx.lineWidth = 1.6 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(-65 * dpr, meniscusY);
+        ctx.lineTo(65 * dpr, meniscusY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Stroke crisp glass reagent bottle outline & collar
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.lineJoin = 'round';
+        traceBottlePath();
+        ctx.stroke();
+
+        ctx.fillStyle = borderHex || '#475569';
+        ctx.fillRect(-neckHalfW - 1.5 * dpr, -halfH - 2 * dpr, (neckHalfW + 1.5 * dpr) * 2, 4 * dpr);
+
+        ctx.restore();
+      }
+
+      // --- SCENE B: THERMAL DECOMPOSITION BOILING TUBE & BUNSEN BURNER ---
+      function drawThermalApparatus(W, H, benchY, dpr, now, animT, prob, vis) {
+        const burnerX = W * 0.34;
+        const tubeBaseX = burnerX + 12 * dpr;
+        const tubeBaseY = benchY - 72 * dpr;
+        const tubeAngle = -0.52; // tilted upward-right (~30 deg)
+        const tubeLen = Math.min(165 * dpr, W * 0.34);
+        const tubeRadius = 17 * dpr;
+
+        const r1Meta = vis.r1 || { display: 'Reactant(s)', colorName: 'Solid Crystals', hex: '#CBD5E1', border: '#64748B' };
+        const solidHex = vis.pptMeta ? vis.pptMeta.hex : r1Meta.hex;
+        const solidBorder = vis.pptMeta ? vis.pptMeta.border : r1Meta.border;
+
+        // 1. Retort Clamp Stand on Left
+        const standX = burnerX - 58 * dpr;
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(standX - 24 * dpr, benchY - 8 * dpr, 48 * dpr, 8 * dpr);
+        ctx.fillRect(standX - 3 * dpr, benchY - 195 * dpr, 6 * dpr, 187 * dpr);
+
+        // Clamp arm holding mid-tube
+        const clampTargetX = tubeBaseX + Math.cos(tubeAngle) * (tubeLen * 0.62);
+        const clampTargetY = tubeBaseY + Math.sin(tubeAngle) * (tubeLen * 0.62);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 4 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(standX, clampTargetY);
+        ctx.lineTo(clampTargetX, clampTargetY);
+        ctx.stroke();
+
+        // 2. Bunsen Burner & Animated Blue/Amber Flame beneath Tube Base
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(burnerX - 18 * dpr, benchY - 8 * dpr, 36 * dpr, 8 * dpr);
+        ctx.fillStyle = '#64748B';
+        ctx.fillRect(burnerX - 6 * dpr, benchY - 42 * dpr, 12 * dpr, 34 * dpr);
+
+        const flicker = Math.sin(now * 0.02) * 3 * dpr;
+        const flameTopY = tubeBaseY + 12 * dpr;
+        const flameBotY = benchY - 42 * dpr;
+
+        // Outer warm flame
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.78)';
+        ctx.beginPath();
+        ctx.moveTo(burnerX - 11 * dpr, flameBotY);
+        ctx.quadraticCurveTo(burnerX - 14 * dpr, (flameTopY + flameBotY) * 0.5, burnerX + flicker * 0.4, flameTopY);
+        ctx.quadraticCurveTo(burnerX + 14 * dpr, (flameTopY + flameBotY) * 0.5, burnerX + 11 * dpr, flameBotY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner blue cone
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.90)';
+        ctx.beginPath();
+        ctx.moveTo(burnerX - 6 * dpr, flameBotY);
+        ctx.quadraticCurveTo(burnerX, flameTopY + 14 * dpr + flicker * 0.3, burnerX + 6 * dpr, flameBotY);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Evolved Gas Plumes Rising from Open Mouth of Boiling Tube
+        const mouthX = tubeBaseX + Math.cos(tubeAngle) * tubeLen;
+        const mouthY = tubeBaseY + Math.sin(tubeAngle) * tubeLen;
+
+        if (vis.gasMeta) {
+          for (let g = 0; g < 8; g++) {
+            const age = ((now * 0.0012 + g / 8) % 1);
+            const gx = mouthX + 12 * dpr + age * 42 * dpr + Math.sin(now * 0.004 + g) * 6 * dpr;
+            const gy = mouthY - 6 * dpr - age * 68 * dpr;
+            const gr = (8 + age * 14) * dpr;
+
+            ctx.save();
+            ctx.globalAlpha = (1 - age) * 0.72;
+            ctx.fillStyle = vis.gasMeta.hex;
+            ctx.beginPath();
+            ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          drawColorSwatchTag(
+            mouthX + 68 * dpr,
+            mouthY - 46 * dpr,
+            dpr,
+            vis.gasMeta.display,
+            `Gas: ${vis.gasMeta.colorName}`,
+            vis.gasMeta.hex,
+            vis.gasMeta.border
+          );
+        }
+
+        // 4. Angled Borosilicate Boiling Tube & Solid Residue Bed
+        ctx.save();
+        ctx.translate(tubeBaseX, tubeBaseY);
+        ctx.rotate(tubeAngle);
+
+        // Clip interior of boiling tube
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, tubeRadius, Math.PI * 0.5, Math.PI * 1.5);
+        ctx.lineTo(tubeLen, -tubeRadius);
+        ctx.lineTo(tubeLen, tubeRadius);
+        ctx.closePath();
+        ctx.clip();
+
+        // Solid crystal / oxide residue at bottom end of tube
+        ctx.fillStyle = solidHex;
+        ctx.fillRect(-tubeRadius - 2 * dpr, -tubeRadius, tubeLen * 0.42 + tubeRadius, tubeRadius * 2);
+
+        // Granular crystal dots
+        ctx.fillStyle = solidBorder || '#475569';
+        for (let k = 0; k < 18; k++) {
+          const kx = -6 * dpr + ((k * 13) % Math.max(16, tubeLen * 0.36));
+          const ky = -tubeRadius * 0.7 + ((k * 9) % Math.max(10, tubeRadius * 1.4));
+          ctx.beginPath();
+          ctx.arc(kx, ky, 1.8 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Stroke boiling tube glass walls & flared rim
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.6 * dpr;
+        ctx.beginPath();
+        ctx.arc(0, 0, tubeRadius, Math.PI * 0.5, Math.PI * 1.5);
+        ctx.lineTo(tubeLen, -tubeRadius);
+        ctx.moveTo(0, tubeRadius);
+        ctx.lineTo(tubeLen, tubeRadius);
+        ctx.stroke();
+
+        // Tube rim lip
+        ctx.beginPath();
+        ctx.moveTo(tubeLen, -tubeRadius - 3 * dpr);
+        ctx.lineTo(tubeLen, tubeRadius + 3 * dpr);
+        ctx.stroke();
+        ctx.restore();
+
+        // Reactant & Product Solid Swatch Callouts
+        drawColorSwatchTag(
+          standX - 8 * dpr,
+          tubeBaseY - 46 * dpr,
+          dpr,
+          r1Meta.display,
+          `Heated Solid: ${r1Meta.colorName}`,
+          r1Meta.hex,
+          r1Meta.border
+        );
+
+        if (vis.pptMeta) {
+          drawColorSwatchTag(
+            tubeBaseX + 75 * dpr,
+            benchY - 32 * dpr,
+            dpr,
+            vis.pptMeta.display,
+            `Residue: ${vis.pptMeta.colorName}`,
+            vis.pptMeta.hex,
+            vis.pptMeta.border
+          );
+        }
+      }
+
+      // --- SCENE C: LIMEWATER CO2 GAS BUBBLER APPARATUS ---
+      function drawLimewaterBubblerApparatus(W, H, benchY, dpr, now, animT, prob, vis) {
+        const bx = W * 0.48;
+        const beakerBottomY = benchY - 12 * dpr;
+        const beakerH = Math.min(155 * dpr, H * 0.43);
+        const beakerW = Math.min(148 * dpr, W * 0.30);
+        const beakerHalfW = beakerW / 2;
+        const beakerTopY = beakerBottomY - beakerH;
+        const liquidTopY = beakerBottomY - beakerH * 0.58;
+
+        const r1Meta = vis.r1 || { display: 'Ca(OH)₂', colorName: 'Colorless Limewater', hex: '#E2E8F0', border: '#94A3B8' };
+        const r2Meta = vis.r2 || { display: 'CO₂(g)', colorName: 'Colorless Gas', hex: '#E2E8F0', border: '#64748B' };
+
+        const isMilky = Boolean(vis.pptMeta || vis.solMeta);
+        const liquidHex = isMilky ? '#FFFFFF' : r1Meta.hex;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.lineTo(bx - beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.quadraticCurveTo(bx - beakerHalfW, beakerBottomY, bx - beakerHalfW + 12 * dpr, beakerBottomY);
+        ctx.lineTo(bx + beakerHalfW - 12 * dpr, beakerBottomY);
+        ctx.quadraticCurveTo(bx + beakerHalfW, beakerBottomY, bx + beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.lineTo(bx + beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.fillStyle = liquidHex;
+        ctx.fillRect(bx - beakerHalfW, liquidTopY, beakerW, beakerBottomY - liquidTopY);
+
+        if (isMilky) {
+          ctx.fillStyle = '#CBD5E1';
+          for (let i = 0; i < 28; i++) {
+            const px = bx - beakerHalfW * 0.8 + ((i * 23) % Math.max(20, beakerW * 0.85));
+            const py = liquidTopY + 8 * dpr + ((i * 13) % Math.max(15, beakerBottomY - liquidTopY - 14 * dpr));
+            ctx.beginPath();
+            ctx.arc(px, py, 2.2 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        const tipX = bx - 10 * dpr;
+        const tipY = beakerBottomY - 18 * dpr;
+        for (let b = 0; b < 7; b++) {
+          const cycle = ((now * 0.055 + b * 14) % (tipY - liquidTopY - 6 * dpr));
+          const byDot = tipY - cycle;
+          const bxDot = tipX + Math.sin(now * 0.01 + b) * 5 * dpr;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = '#64748B';
+          ctx.lineWidth = 1.4 * dpr;
+          ctx.beginPath();
+          ctx.arc(bxDot, byDot, 3.6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Graduated Glass Beaker Outline
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.8 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW - 8 * dpr, beakerTopY);
+        ctx.lineTo(bx - beakerHalfW, beakerTopY + 8 * dpr);
+        ctx.lineTo(bx - beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.quadraticCurveTo(bx - beakerHalfW, beakerBottomY, bx - beakerHalfW + 12 * dpr, beakerBottomY);
+        ctx.lineTo(bx + beakerHalfW - 12 * dpr, beakerBottomY);
+        ctx.quadraticCurveTo(bx + beakerHalfW, beakerBottomY, bx + beakerHalfW, beakerBottomY - 12 * dpr);
+        ctx.lineTo(bx + beakerHalfW, beakerTopY + 6 * dpr);
+        ctx.stroke();
+
+        // Glass Gas Delivery Tube entering from Left into Limewater
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 5 * dpr;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW - 68 * dpr, beakerTopY - 26 * dpr);
+        ctx.lineTo(bx - 10 * dpr, beakerTopY - 26 * dpr);
+        ctx.lineTo(bx - 10 * dpr, beakerBottomY - 18 * dpr);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#BAE6FD';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(bx - beakerHalfW - 68 * dpr, beakerTopY - 26 * dpr);
+        ctx.lineTo(bx - 10 * dpr, beakerTopY - 26 * dpr);
+        ctx.lineTo(bx - 10 * dpr, beakerBottomY - 18 * dpr);
+        ctx.stroke();
+
+        // Upright Reagent & Product Swatch Tags
+        drawColorSwatchTag(
+          bx - beakerHalfW - 68 * dpr,
+          beakerTopY - 54 * dpr,
+          dpr,
+          r2Meta.display,
+          `Gas Stream: ${r2Meta.colorName}`,
+          r2Meta.hex,
+          r2Meta.border
+        );
+
+        drawColorSwatchTag(
+          bx - beakerHalfW - 66 * dpr,
+          beakerBottomY - beakerH * 0.36,
+          dpr,
+          r1Meta.display,
+          `Beaker: ${r1Meta.colorName}`,
+          r1Meta.hex,
+          r1Meta.border
+        );
+
+        if (vis.pptMeta) {
+          drawColorSwatchTag(
+            bx + beakerHalfW + 68 * dpr,
+            beakerBottomY - 28 * dpr,
+            dpr,
+            vis.pptMeta.display,
+            `Suspension: ${vis.pptMeta.colorName}`,
+            vis.pptMeta.hex,
+            vis.pptMeta.border
+          );
+        }
+      }
+
+      // --- TOP-RIGHT TARGET COLOR SWATCH REFERENCE CARD ---
+      function drawTargetReferenceCard(W, H, dpr, prob) {
+        const cardW = 148 * dpr;
+        const cardH = 66 * dpr;
+        const x = W - cardW - 14 * dpr;
+        const y = 52 * dpr;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(248, 250, 252, 0.96)';
+        ctx.strokeStyle = '#93C5FD';
+        ctx.lineWidth = 1.8 * dpr;
+        roundRectPath(x, y, cardW, cardH, 12 * dpr);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#1D4ED8';
+        ctx.font = `800 ${9 * dpr}px "Inter", sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText('TARGET PRODUCT COLORS', x + 10 * dpr, y + 15 * dpr);
+
+        const tv = prob.targetVisual;
+        let rowY = y + 32 * dpr;
+
+        if (tv.pptHex) {
+          ctx.fillStyle = tv.pptHex;
+          ctx.strokeStyle = tv.pptBorder || '#475569';
+          ctx.lineWidth = 1.5 * dpr;
+          ctx.beginPath();
+          ctx.arc(x + 17 * dpr, rowY - 3 * dpr, 6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#0F172A';
+          ctx.font = `700 ${9.5 * dpr}px "JetBrains Mono", monospace`;
+          ctx.fillText(tv.pptLabel || 'Target Solid', x + 28 * dpr, rowY);
+          rowY += 18 * dpr;
+        }
+
+        if (tv.gasHex) {
+          ctx.fillStyle = tv.gasHex;
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5 * dpr;
+          ctx.beginPath();
+          ctx.arc(x + 17 * dpr, rowY - 3 * dpr, 6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#0F172A';
+          ctx.font = `700 ${9.5 * dpr}px "JetBrains Mono", monospace`;
+          ctx.fillText(tv.gasLabel || 'Target Gas', x + 28 * dpr, rowY);
+          rowY += 18 * dpr;
+        }
+
+        if (!tv.pptHex && !tv.gasHex && tv.solutionHex) {
+          ctx.fillStyle = tv.solutionHex;
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5 * dpr;
+          ctx.beginPath();
+          ctx.arc(x + 17 * dpr, rowY - 3 * dpr, 6 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#0F172A';
+          ctx.font = `700 ${9.5 * dpr}px "JetBrains Mono", monospace`;
+          ctx.fillText('Target Solution', x + 28 * dpr, rowY);
+        }
+
+        ctx.restore();
+      }
+
+      // --- UI EVENT LISTENERS ---
+      document.querySelectorAll('.mode-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-mode');
+          state.navMode = mode;
+
+          document.querySelectorAll('.mode-tab').forEach((b) => {
+            const isSelected = b.getAttribute('data-mode') === mode;
+            b.className = isSelected
+              ? 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-blue-700 text-white shadow-sm'
+              : 'mode-tab px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+          });
+
+          const targetTopic = mode === 'blitz' ? 'precip' : mode;
+          loadProblem(targetTopic, false);
+        });
+      });
+
+      btnStartChallenge.addEventListener('click', () => {
+        if (state.timerRunning) pauseTimer();
+        else startTimer();
+      });
+
+      btnResetChallenge.addEventListener('click', resetChallengeStats);
+
+      btnSkipProblem.addEventListener('click', () => {
+        if (state.navMode === 'blitz') {
+          const order = ['precip', 'redox', 'thermal'];
+          const nextTopic = order[(order.indexOf(state.activeTopic) + 1) % order.length];
+          loadProblem(nextTopic, true);
+        } else {
+          loadProblem(state.activeTopic, true);
+        }
+      });
+
+      btnToggleHint.addEventListener('click', () => {
+        hintBanner.classList.toggle('hidden');
+      });
+
+      btnMute.addEventListener('click', () => {
+        isMuted = !isMuted;
+        btnMute.textContent = isMuted ? '🔇' : '🔊';
+      });
+
+      equationInput.addEventListener('input', updateLiveReactionPreview);
+
+      equationInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          triggerMixAndVerify(false);
+        }
+      });
+
+      btnClearEquation.addEventListener('click', () => {
+        equationInput.value = '';
+        equationInput.focus();
+        updateLiveReactionPreview();
+      });
+
+      document.querySelectorAll('.sym-insert-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          insertAtCursor(btn.getAttribute('data-insert'));
+        });
+      });
+
+      btnFireAction.addEventListener('click', () => triggerMixAndVerify(false));
+
+      btnPlayAgainModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+        startTimer();
+      });
+
+      btnCloseModal.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        resetChallengeStats();
+      });
+
+      loadProblem('precip', false);
+      requestAnimationFrame(renderLoop);
+    })();
+  </script>
+</body>
+</html>
